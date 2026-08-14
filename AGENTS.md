@@ -1,8 +1,8 @@
-# 2009Scape workspace guidance
+# ComfyScape workspace guidance
 
 ## Workspace scope
 
-- This IntelliJ workspace is `D:\OSRS\2009Scape` and contains two independent Git repositories: `Server/` and `Client/`. The workspace root is not itself a Git repository, so run Git commands from the relevant component directory.
+- This IntelliJ workspace is `D:\OSRS\ComfyScape`, a Git monorepo containing `Server/` and `Client/`. Run Git commands from the workspace root.
 - Do not access or modify anything outside this workspace, including other experiments in `D:\OSRS`.
 - `Server/` is the 2009scape game and management server. Its Maven `pom.xml` is at `Server/Server/pom.xml`; do not assume `Server/` itself is the Maven root.
 - `Client/` is the maintained 2009scape RT4 client and uses Gradle.
