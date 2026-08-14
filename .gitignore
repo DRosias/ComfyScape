@@ -8,6 +8,9 @@
 # Local IntelliJ project metadata.
 /.idea/
 
+# Local agent workspace instructions.
+/AGENTS.md
+
 # Generated runtime and build artifacts.
 *.class
 *.jar
