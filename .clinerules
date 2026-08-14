@@ -1,0 +1,67 @@
+# Project: OSRS Private Server (2009scape) + Distributable Client
+
+## What this project is
+A private OSRS server (2009-era content) built on 2009scape, self-hosted on
+your local server, with a pre-packaged client distributed to friends for
+double-click-and-play access over the internet.
+
+## Project root
+D:\OSRS\2009Scape — IntelliJ project root, containing Server/ and Client/ as
+subfolders. The wider D:\OSRS folder has other abandoned experiments (old
+228 attempts) that live outside this project root and are not part of this
+codebase.
+
+## Repos / components
+- Server/  — 2009scape server + management server
+  Source: https://gitlab.com/2009scape/2009scape.git
+  Build system: Maven — actual pom.xml lives at Server/Server (nested folder,
+  not the Server/ root itself)
+  Also contains Server/Tools/Frostys Cache Editor — a separate Eclipse
+  project/tool, not part of the core server build, not a current priority
+  A Management Server component is referenced in the repo description but
+  its exact build location hasn't been confirmed yet
+- Client/  — RT4 client (official 2009scape-maintained fork, not the older
+  Pazaz/RT4-Client original)
+  Source: https://gitlab.com/2009scape/rt4-client.git
+  Build system: Gradle
+- distribution/ — (not yet created) packaging scripts, bundled JRE, output
+  zip for friend-facing distribution
+
+## Git
+Server/ and Client/ are two independent git repositories, each with their
+own .git folder. The parent D:\OSRS\2009Scape folder is not itself a repo —
+running git commands from that top level will correctly fail. Both should
+be registered as separate VCS roots in IntelliJ (File → Settings → Version
+Control) so branch/commit tracking works per-repo.
+
+## Key decisions (don't relitigate these without discussion)
+- We are NOT using the Saradomin launcher for distribution. It is hard-coded
+  to only connect to the local computer and cannot point at a custom server
+  IP/hostname.
+- Instead: use the raw RT4 client directly, with a pre-edited config
+  pointing at our server, bundled with a portable JRE 11, so friends can
+  double-click and play without editing anything.
+- Reference for packaging later: gitlab.com/2009scape/singleplayer/windows
+  (crossplatform-release) — an official example of bundling client+server+JRE
+  together for a similar "just run it" experience. Not something we build
+  from directly, just a structural reference for the packaging step.
+
+## Networking
+- Server-facing hostname: danny-games.servegame.com (No-IP dynamic DNS)
+- Game port: confirm actual port from Server's config before hardcoding
+  anywhere — do not assume a value
+- Router port forwarding is handled outside this repo
+
+## Conventions & constraints
+- Never hardcode a local/LAN IP anywhere in client or server config —
+  always use the No-IP hostname, since distributed clients must work over
+  the internet, not just localhost.
+- Server = Maven, Client = Gradle — this is intentional, don't try to unify
+  build tooling.
+- Client config changes (server address/port) are deliberate and
+  packaging-related — flag any change to this clearly.
+
+## Things to avoid
+- Don't reintroduce Saradomin launcher as the distribution method.
+- Don't assume the game port without checking Server's actual config file.
+- Don't touch anything in D:\OSRS outside the 2009Scape/ project folder.

@@ -1,0 +1,29 @@
+# --- Gradle Build & Cache Artifacts ---
+.gradle/
+build/
+*/build/
+gradle-app.setting
+!gradle-wrapper.jar
+
+# --- Maven Build & Dependency Artifacts ---
+target/
+*/target/
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+release.properties
+
+# --- Compiled Application Server Binaries ---
+*.jar
+*.war
+*.ear
+*.rar
+*.class
+
+# --- IDE & Indexing Bloat ---
+.pki/
+.metadata/
+*.ipr
+*.iws
+*.iml

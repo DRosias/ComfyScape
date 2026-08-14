@@ -1,0 +1,14 @@
+# Preserved metadata from the former standalone repositories.
+/Server/.git-standalone-history/
+/Client/.git-standalone-history/
+
+# Local development runtime; obtain it through the documented setup instead.
+/Client/jdk/
+
+# Local IntelliJ project metadata.
+/.idea/
+
+# Generated runtime and build artifacts.
+*.class
+*.jar
+/Client/client/plugins/

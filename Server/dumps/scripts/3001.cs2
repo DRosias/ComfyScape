@@ -1,0 +1,43 @@
+void script_3001() {
+	int ivar0;
+	int ivar1;
+	int ivar2;
+	int ivar3;
+	int ivar4;
+	int ivar5;
+	int ivar6;
+	int ivar7;
+	string svar0;
+	string svar1;
+	string svar2;
+	string svar3;
+	opcStruct6901(3,0,0) structdump_0;
+	ivar0 = 0;
+	ivar1 = 0;
+	ivar2 = 0;
+	svar0 = "";
+	ivar3 = 0;
+	ivar4 = 0;
+	ivar5 = 0;
+	svar1 = "";
+	svar2 = "";
+	svar3 = "";
+	structdump_0 = cs2method6901();
+	ivar0 = structdump_0.intpart_2;
+	ivar2 = structdump_0.intpart_1;
+	ivar1 = structdump_0.intpart_0;
+	ivar6 = cs2method6904();
+	if (((boolean)ivar6)) {
+		setWidgetText(new WidgetPointer(907,1), "Welcome to ComfyScape!");
+		return;
+	}
+	ivar7 = subtract(getCurrentDaysSinceLaunch(), ivar6);
+	if (ivar7 < 1) {
+		setWidgetText(new WidgetPointer(907,1), "You last logged in earlier today from: " + getLastIp());
+	} else if (((boolean)ivar7)) {
+		setWidgetText(new WidgetPointer(907,1), "You last logged in yesterday from: " + getLastIp());
+	} else {
+		setWidgetText(new WidgetPointer(907,1), "You last logged in " + intToStr(ivar7) + " days ago from: " + getLastIp());
+	}
+	return;
+}

@@ -1,0 +1,14 @@
+package core.storage
+
+import core.auth.UserAccountInfo
+
+interface AccountStorageProvider {
+    fun checkUsernameTaken(username: String): Boolean
+    fun getAccountInfo(username: String): UserAccountInfo
+    fun getUsernamesWithIP(ip: String) : List<String>
+    fun getElevatedAccounts(): List<UserAccountInfo>
+    fun store(info: UserAccountInfo)
+    fun update(info: UserAccountInfo)
+    fun remove(info: UserAccountInfo)
+    fun getOnlineFriends(username: String) : List<String>
+}
