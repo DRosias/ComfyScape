@@ -19,8 +19,6 @@ import core.game.container.impl.BankContainer
 import core.game.event.ButtonClickEvent
 import core.game.ge.GrandExchange.Companion.getOfferStats
 import core.game.ge.GrandExchange.Companion.getRecommendedPrice
-import core.game.ge.GrandExchange.Companion.getSuggestedBuyPrice
-import core.game.ge.GrandExchange
 import core.game.ge.GrandExchangeOffer
 import core.game.ge.PriceIndex
 import core.game.interaction.*
@@ -51,7 +49,6 @@ import core.net.packet.context.PlayerContext
 import core.net.packet.`in`.Packet
 import core.net.packet.`in`.RunScript
 import core.net.packet.out.ClearMinimapFlag
-import core.security.EncryptedPasswordInput
 import core.tools.Log
 import core.worker.ManagementEvents
 import org.rs09.consts.Components
@@ -164,29 +161,11 @@ object PacketProcessor {
             is Packet.QuickChat -> QCRepository.sendQC(pkt.player, pkt.multiplier, pkt.offset, pkt.type, pkt.indexA, pkt.indexB, pkt.forClan)
             is Packet.InputPromptResponse -> {
                 val script: ((Any) -> Boolean) = pkt.player.getAttribute<((Any) -> Boolean)?>("runscript", null) ?: return
-                val encryptedPasswordRequired = pkt.player.getAttribute(EncryptedPasswordInput.REQUIRED_ATTRIBUTE, false)
-                if (pkt.player.locks.isInteractionLocked) {
-                    if (encryptedPasswordRequired) {
-                        pkt.player.removeAttribute(EncryptedPasswordInput.REQUIRED_ATTRIBUTE)
-                        pkt.player.removeAttribute("runscript")
-                        pkt.player.removeAttribute("input-type")
-                    }
+                if (pkt.player.locks.isInteractionLocked)
                     return
-                }
-                val response = if (encryptedPasswordRequired) EncryptedPasswordInput.decrypt(pkt.response) else pkt.response
-                if (response == null) {
-                    sendMessage(pkt.player, "The encrypted password response was invalid. Please run the command again.")
-                    pkt.player.removeAttribute(EncryptedPasswordInput.REQUIRED_ATTRIBUTE)
-                    pkt.player.removeAttribute("parseamount")
-                    pkt.player.removeAttribute("runscript")
-                    pkt.player.removeAttribute("input-type")
-                    return
-                }
-                pkt.player.removeAttribute(EncryptedPasswordInput.REQUIRED_ATTRIBUTE)
                 try {
-                    RunScript.processInput(pkt.player, response, script)
+                    RunScript.processInput(pkt.player, pkt.response, script)
                 } finally {
-                    pkt.player.removeAttribute(EncryptedPasswordInput.REQUIRED_ATTRIBUTE)
                     pkt.player.removeAttribute("parseamount")
                     pkt.player.removeAttribute("runscript")
                 }
@@ -226,7 +205,7 @@ object PacketProcessor {
                 }
                 offer.player = pkt.player
                 offer.amount = 1
-                offer.offeredValue = getSuggestedBuyPrice(pkt.itemId)
+                offer.offeredValue = getRecommendedPrice(pkt.itemId, false)
                 offer.index = index
                 StockMarket.updateVarbits(pkt.player, offer, index, false)
                 pkt.player.setAttribute("ge-temp", offer)

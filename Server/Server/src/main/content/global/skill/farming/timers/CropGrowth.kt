@@ -6,14 +6,25 @@ import org.json.simple.*
 import core.game.node.entity.Entity
 import core.game.node.entity.player.Player
 import content.global.skill.farming.*
+import java.util.concurrent.TimeUnit
+import java.time.*
 
-class CropGrowth : PersistTimer (50, "farming:crops", isSoft = true) { 
+class CropGrowth : PersistTimer (500, "farming:crops", isSoft = true) { 
     private val patchMap = HashMap<FarmingPatch, Patch>()
     lateinit var player: Player
 
     override fun onRegister (entity: Entity) {
         player = (entity as? Player)!!
         runOfflineCatchupLogic()
+    }
+
+    //Sync the 5 minute run cycles with :05 on realtime clocks - authentic
+    override fun getInitialRunDelay() : Int {
+        val now = LocalTime.now()
+        val minsUntil5MinSync = 5 - (now.getMinute() % 5)
+        val ticks = secondsToTicks (minsUntil5MinSync * 60)
+        player.debug("[CropGrowth] Scheduled first growth cycle for $ticks ticks from now.")
+        return ticks
     }
 
     override fun run (entity: Entity) : Boolean {
@@ -24,9 +35,14 @@ class CropGrowth : PersistTimer (50, "farming:crops", isSoft = true) {
                 continue
             }
 
-            val now = System.currentTimeMillis()
-            while(patch.nextGrowth <= now && !patch.isDead && !patch.isChoppedFruitTree()){
-                patch.nextGrowth += patch.getStageGrowthMillis()
+            //Go ahead and grow anything within 4 minutes of the 5-minute-synced growth cycles, bringing out-of-sync patches into sync.
+            //This seems to be authentic as well, with the RS wiki sometimes stating 20-minute patches can grow in as little as 7 minutes depending on timing of planting
+            //It also makes sense, as otherwise if you e.g. planted something at 10:34 that takes 5 minutes to grow, it would take 6 minutes in reality instead of 5.
+            //Another more extreme example is if you planted something at 10:31 that takes 5 minutes to grow. 10:35 comes around, it hasn't been 5 minutes, so it doesn't grow, meaning
+            //it actually grows at 10:40, an extra 4 minutes.
+            //this code makes it so crops planted both at 10:31 and 10:34 grow at 10:35 if they are supposed to take 5 minutes for each stage.
+            if(patch.nextGrowth < (System.currentTimeMillis() + 240_000L) && !patch.isDead && !patch.isChoppedFruitTree()){
+                patch.nextGrowth = System.currentTimeMillis() + TimeUnit.MINUTES.toMillis(patch.getStageGrowthMinutes().toLong())
                 patch.update()
             }
 
@@ -61,11 +77,10 @@ class CropGrowth : PersistTimer (50, "farming:crops", isSoft = true) {
                 var simulatedTime = patch.nextGrowth
 
                 while (simulatedTime < nowTime && stagesToSimulate-- > 0 && !patch.isDead) {
-                    val timeToIncrement = patch.getStageGrowthMillis()
+                    val timeToIncrement = TimeUnit.MINUTES.toMillis(patch.getStageGrowthMinutes().toLong())
                     patch.update()
                     simulatedTime += timeToIncrement
                 }
-                patch.nextGrowth = simulatedTime
             }
         }
     }

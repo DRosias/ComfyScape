@@ -1,6 +1,7 @@
 package core.game.global.report;
 
 import core.game.node.entity.player.Player;
+import core.integrations.discord.Discord;
 import core.game.system.command.CommandMapping;
 
 /**
@@ -50,6 +51,7 @@ public final class AbuseReport {
 			CommandMapping.INSTANCE.get("mute").attemptHandling(player, new String[] {"mute", victim, "48h"});
 		}
 		player.getPacketDispatch().sendMessage("Thank-you, your abuse report has been received.");
+		Discord.postPlayerAlert(victim, "Abuse Report - " + rule.name());
 	}
 
 	/**

@@ -7,6 +7,7 @@ import core.api.PersistPlayer
 import core.api.log
 import core.game.container.Container
 import core.game.node.entity.player.Player
+import core.game.node.entity.player.link.IronmanMode
 import core.game.node.entity.skill.Skills
 import core.game.world.map.Location
 import core.tools.Log
@@ -49,6 +50,7 @@ class PlayerSaver (val player: Player){
         saveBankPinData(saveFile)
         saveHouseData(saveFile)
         saveAchievementData(saveFile)
+        saveIronManData(saveFile)
         saveEmoteData(saveFile)
         saveStatManager(saveFile)
         saveAttributes(saveFile)
@@ -151,6 +153,12 @@ class PlayerSaver (val player: Player){
                 emoteData.add(it.ordinal.toString())
             }
             root.put("emoteData",emoteData)
+        }
+    }
+
+    fun saveIronManData(root: JSONObject){
+        if(player.ironmanManager.mode != IronmanMode.NONE){
+            root.put("ironManMode",player.ironmanManager.mode.ordinal.toString())
         }
     }
 

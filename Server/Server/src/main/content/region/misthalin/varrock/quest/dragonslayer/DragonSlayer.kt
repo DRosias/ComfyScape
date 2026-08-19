@@ -19,6 +19,7 @@ import core.game.world.GameWorld.Pulser
 import core.game.world.map.Location
 import core.game.world.map.RegionManager.getObject
 import core.game.world.update.flag.context.Animation
+import core.integrations.discord.Discord
 import core.plugin.ClassScanner.definePlugins
 import core.plugin.Initializable
 import org.rs09.consts.Items
@@ -332,6 +333,7 @@ class DragonSlayer : Quest(Quests.DRAGON_SLAYER, 18, 17, 2, 176, 0, 1, 10), Logi
     private val SpellCastHook = object : EventHook<SpellCastEvent> {
         override fun process(entity: Entity, event: SpellCastEvent) {
             if (event.spellId == 19 && event.target != null && event.target.id == Items.MAP_PART_1536) {//telegrab
+                Discord.sendToOpenRSC(entity.name, "Player obtained Wormbrain piece! (Murder-Then-Telegrab)")
                 entity.unhook(this)
             }
         }
@@ -340,6 +342,7 @@ class DragonSlayer : Quest(Quests.DRAGON_SLAYER, 18, 17, 2, 176, 0, 1, 10), Logi
     private val PickedUpHook = object : EventHook<PickUpEvent> {
         override fun process(entity: Entity, event: PickUpEvent) {
             if (event.itemId == Items.MAP_PART_1536) {
+                Discord.sendToOpenRSC(entity.name, "Player obtained Wormbrain piece! (Yoinked-Off-Floor)")
                 entity.unhook(this)
             }
         }

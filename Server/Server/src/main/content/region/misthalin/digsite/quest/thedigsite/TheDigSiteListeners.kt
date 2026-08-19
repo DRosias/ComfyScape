@@ -1,7 +1,6 @@
 package content.region.misthalin.digsite.quest.thedigsite
 
 import content.data.Quests
-import content.region.misthalin.varrock.MuseumKudos
 import content.global.skill.thieving.ThievingListeners
 import core.api.*
 import core.api.utils.PlayerCamera
@@ -11,7 +10,6 @@ import core.game.dialogue.DialogueBuilder
 import core.game.dialogue.DialogueBuilderFile
 import core.game.dialogue.DialogueFile
 import core.game.dialogue.FacialExpression
-import core.game.global.action.DoorActionHandler
 import core.game.interaction.IntType
 import core.game.interaction.InteractionListener
 import core.game.interaction.QueueStrength
@@ -879,11 +877,10 @@ class TheDigSiteListeners : InteractionListener {
 
         // Scenery not tied to quest
 
-        on(intArrayOf(Scenery.GATE_24560, Scenery.GATE_24561), IntType.SCENERY, "open") { player, node ->
-            if (isQuestComplete(player, Quests.THE_DIG_SITE) && MuseumKudos.hasFullKudos(player)) {
-                DoorActionHandler.handleAutowalkDoor(player, node.asScenery())
-                return@on true
-            }
+        on(intArrayOf(Scenery.GATE_24560, Scenery.GATE_24561), IntType.SCENERY, "open") { player, _ ->
+            // This gate is only openable when you have completed Digsite and have 153 kudos from the museum.
+            // We can assume, no one is going to reach that until the museum is fully fleshed out.
+            // So this gate will stay locked.
             sendMessage(player, "You can't go through there, it's for Dig Site workmen only.")
             sendChat(findNPC(NPCs.MUSEUM_GUARD_5942) as Entity, "Sorry - workman's gate only.")
             return@on true

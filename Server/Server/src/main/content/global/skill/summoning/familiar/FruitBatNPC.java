@@ -45,7 +45,7 @@ public class FruitBatNPC extends Forager {
 	 * https://www.youtube.com/watch?v=sS8ch9HkGHY
 	 * https://www.youtube.com/watch?v=cMTjDUOvHVM
 	 * https://www.youtube.com/watch?v=WrVsge_MNp4
-	 * Source: archived Fruitfall guide.
+	 * https://2009scape.wiki/w/Money_making_guide/Casting_fruitfall
 	 */
 	private static final WeightedChanceItem[] FRUIT_FALL = new WeightedChanceItem[] {
 			new WeightedChanceItem(Items.ORANGE_2108, 1, 4),

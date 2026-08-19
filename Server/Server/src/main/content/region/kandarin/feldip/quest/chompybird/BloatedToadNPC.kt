@@ -92,7 +92,7 @@ class BloatedToadListeners : InteractionListener, StartupListener, Commands {
   }
 
   override fun defineCommands() {
-    define("toadzone", Privilege.ADMIN, "", "Toad inflation.") {player, _ ->
+    define("toadzone", Privilege.MODERATOR, "", "Toad inflation.") {player, _ -> 
       val swloc = player.location.transform(-15,-15,0)
       val neloc = player.location.transform(15,15,0)
       val newBorders = ZoneBorders(swloc.x, swloc.y, neloc.x, neloc.y) 

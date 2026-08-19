@@ -42,12 +42,11 @@ public class ModeratorZone extends MapZone {
 			return true;
 		}
 		final Player player = ((Player) entity);
-		final Rights rights = player.getDetails().getRights();
-		if (rights == Rights.REGULAR_PLAYER || (!open && rights != Rights.ADMINISTRATOR)) {
+		if ((!open && player.getDetails().getRights() != Rights.ADMINISTRATOR)) {
 			home(player);
 			return false;
 		}
-		if (rights == Rights.PLAYER_MODERATOR) {
+		if (player.getDetails().getRights() == Rights.PLAYER_MODERATOR) {
 			// player.getInterfaceManager().removeTabs(0, 1, 2, 3, 4, 5, 6, 12);
 		} else {
 			player.getPacketDispatch().sendMessage(getToggleMessage());

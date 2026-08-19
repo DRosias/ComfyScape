@@ -45,9 +45,7 @@ class AbyssPlugin : InteractionListener {
         definePlugin(AbyssalNPC())
         definePlugin(DarkMageDialogue())
         definePlugin(ZamorakMageDialogue())
-        // The Abyss entrance mage at Varrock's Chaos Temple uses ID 2260.
-        // ID 2259 is not the spawned entrance NPC, so its Teleport option was unhandled.
-        on(2260, IntType.NPC, "teleport"){ player, node ->
+        on(NPCs.MAGE_OF_ZAMORAK_2259, IntType.NPC, "teleport"){ player, node ->
             teleport(player, node as NPC)
             return@on true
         }

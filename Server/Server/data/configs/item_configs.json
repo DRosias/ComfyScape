@@ -2547,7 +2547,7 @@
   {
     "id": "292",
     "name": "Book on baxtorian",
-    "examine": "A book on elven history in northern ComfyScape.",
+    "examine": "A book on elven history in northern 2009Scape.",
     "archery_ticket_price": "0",
     "durability": null
   },
@@ -4706,7 +4706,7 @@
   {
     "id": "550",
     "name": "Newcomer map",
-    "examine": "Issued by ComfyScape Council to all new citizens.",
+    "examine": "Issued by 2009Scape Council to all new citizens.",
     "archery_ticket_price": "0",
     "durability": null,
     "ge_buy_limit": "100",
@@ -5172,7 +5172,7 @@
   {
     "id": "600",
     "name": "Astronomy book",
-    "examine": "A book on the history of astronomy in ComfyScape.",
+    "examine": "A book on the history of astronomy in 2009Scape.",
     "archery_ticket_price": "0",
     "durability": null,
     "ge_buy_limit": "100",
@@ -24442,7 +24442,7 @@
   {
     "id": "2574",
     "name": "Sextant",
-    "examine": "Used by navigators to find their position in ComfyScape.",
+    "examine": "Used by navigators to find their position in 2009Scape.",
     "archery_ticket_price": "0",
     "durability": null,
     "weight": "0.2"
@@ -24458,7 +24458,7 @@
   {
     "id": "2576",
     "name": "Chart",
-    "examine": "A navigator's chart of ComfyScape.",
+    "examine": "A navigator's chart of 2009Scape.",
     "archery_ticket_price": "0",
     "durability": null
   },
@@ -30309,7 +30309,7 @@
   {
     "id": "3241",
     "name": "Man",
-    "examine": "One of ComfyScape's many citizens.",
+    "examine": "One of 2009Scape's many citizens.",
     "archery_ticket_price": "0",
     "attack_speed": "4",
     "durability": null
@@ -39625,7 +39625,7 @@
   {
     "id": "4566",
     "name": "Rubber chicken",
-    "examine": "Perhaps not the most powerful weapon in ComfyScape.",
+    "examine": "Perhaps not the most powerful weapon in 2009Scape.",
     "archery_ticket_price": "0",
     "attack_anims": "1833,1833,1833,1833",
     "attack_audios": "2257,2257,2257",
@@ -87634,7 +87634,7 @@
   {
     "id": "10732",
     "name": "Rubber chicken",
-    "examine": "Perhaps not the most powerful weapon in ComfyScape.",
+    "examine": "Perhaps not the most powerful weapon in 2009Scape.",
     "archery_ticket_price": "0",
     "attack_audios": "2257,2257,2257",
     "attack_speed": "4",
@@ -112230,8 +112230,8 @@
   },
   {
     "id": "13576",
-    "name": "Map of ComfyScape",
-    "examine": "Your best impression of a map of ComfyScape.",
+    "name": "Map of 2009Scape",
+    "examine": "Your best impression of a map of 2009Scape.",
     "absorb": "0,0,0",
     "archery_ticket_price": "0",
     "attack_speed": "4",
@@ -118113,7 +118113,7 @@
     "attack_speed": "4",
     "bonuses": "0,0,0,0,0,0,0,0,0,0,0,0,0,0,0",
     "destroy": "true",
-    "destroy_message": "You can get another copy by searching bookshelves around ComfyScape.",
+    "destroy_message": "You can get another copy by searching bookshelves around 2009Scape.",
     "durability": null,
     "shop_price": "5"
   },

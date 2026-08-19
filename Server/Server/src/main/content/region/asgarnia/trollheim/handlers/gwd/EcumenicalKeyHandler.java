@@ -1,5 +1,5 @@
 /**
- * Source: archived Ecumenical key documentation.
+ * https://oldschool.2009scape.wiki/w/Ecumenical_key
  */
 //package core.game.content.activity.gwd;
 //

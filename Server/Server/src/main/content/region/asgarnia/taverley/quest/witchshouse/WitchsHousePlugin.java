@@ -21,7 +21,7 @@ import core.tools.RandomFunction;
 import content.data.Quests;
 
 /**
- * Created for ComfyScape
+ * Created for 2009Scape
  * User: Ethan Kyle Millard
  * Date: March 15, 2020
  * Time: 9:54 AM

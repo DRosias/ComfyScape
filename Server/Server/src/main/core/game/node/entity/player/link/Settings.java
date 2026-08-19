@@ -26,11 +26,6 @@ public final class Settings {
 	private double runEnergy = 100.0;
 
 	/**
-	 * Whether the one-time boosted recovery window after depletion is active.
-	 */
-	private boolean lowEnergyRecoveryActive;
-
-	/**
 	 * The player's weight.
 	 */
 	private double weight;
@@ -589,22 +584,6 @@ public final class Settings {
 	 */
 	public double getRunEnergy() {
 		return runEnergy;
-	}
-
-	/**
-	 * Checks whether boosted recovery is active after reaching zero energy.
-	 * @return {@code true} if boosted recovery is active.
-	 */
-	public boolean isLowEnergyRecoveryActive() {
-		return lowEnergyRecoveryActive;
-	}
-
-	/**
-	 * Sets whether boosted recovery is active.
-	 * @param active {@code true} to enable boosted recovery.
-	 */
-	public void setLowEnergyRecoveryActive(boolean active) {
-		lowEnergyRecoveryActive = active;
 	}
 
 	/**

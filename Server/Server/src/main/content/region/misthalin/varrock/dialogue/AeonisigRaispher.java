@@ -10,7 +10,7 @@ import core.game.node.entity.player.Player;
  * @author 'Vexia
  * @version 1.5
  * @note Found transcript on
- * Source: archived Aeonisig Raispher dialogue documentation.
+ * (http://2009scape.wikia.com/wiki/Aeonisig_Raispher/dialogue)
  */
 @Initializable
 public final class AeonisigRaispher extends DialoguePlugin {

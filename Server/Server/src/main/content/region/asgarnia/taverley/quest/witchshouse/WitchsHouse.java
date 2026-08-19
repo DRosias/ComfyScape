@@ -7,7 +7,7 @@ import core.plugin.Initializable;
 import content.data.Quests;
 
 /**
- * Created for ComfyScape
+ * Created for 2009Scape
  * User: Ethan Kyle Millard
  * https://www.youtube.com/watch?v=-RuHho3NbWg
  * Date: March 15, 2020

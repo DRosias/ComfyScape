@@ -153,20 +153,20 @@ class plugin : Plugin() {
     }
 
     override fun OnMiniMenuCreate(currentEntries: Array<out MiniMenuEntry>?) {
-//        if (currentEntries != null) {
-//            for ((index, entry) in currentEntries.withIndex()) {
-//                if (entry.type == MiniMenuType.PLAYER && index == currentEntries.size - 1) {
-//                    val input = entry.subject
-//                    val cleanedInput = input
-//                            .trim()
-//                            .replace(Regex("<col=[0-9a-fA-F]{6}>"), "")
-//                            .replace(Regex("<img=\\d+>"), "")
-//                            .replace(Regex("\\(level: \\d+\\)"), "")
-//                            .trim()
-//                    InsertMiniMenuEntry("Lookup", entry.subject, searchHiscore(cleanedInput))
-//                }
-//            }
-//        }
+        if (currentEntries != null) {
+            for ((index, entry) in currentEntries.withIndex()) {
+                if (entry.type == MiniMenuType.PLAYER && index == currentEntries.size - 1) {
+                    val input = entry.subject
+                    val cleanedInput = input
+                            .trim()
+                            .replace(Regex("<col=[0-9a-fA-F]{6}>"), "")
+                            .replace(Regex("<img=\\d+>"), "")
+                            .replace(Regex("\\(level: \\d+\\)"), "")
+                            .trim()
+                    InsertMiniMenuEntry("Lookup", entry.subject, searchHiscore(cleanedInput))
+                }
+            }
+        }
     }
 
     override fun OnPluginsReloaded(): Boolean {
@@ -388,7 +388,7 @@ class plugin : Plugin() {
             )
         }
         StoreData("kondoPlayerXPMultiplier", playerXPMultiplier)
-        /*LootTrackerView.gePriceMap = LootTrackerView.loadGEPrices()*/
+        LootTrackerView.gePriceMap = LootTrackerView.loadGEPrices()
         StoreData("kondoLaunchMinimized", launchMinimized)
         StoreData("kondoUIOffset", uiOffset)
         StoreData("kondoScaledFixed", useScaledFixed)
@@ -431,16 +431,16 @@ class plugin : Plugin() {
         frame.setComponentZOrder(rightPanelWrapper, 0)
     }
 
-//    private fun searchHiscore(username: String): Runnable {
-//        return Runnable {
-//            setActiveView(HiscoresView.VIEW_NAME)
-//            HiscoresView.hiScoreView?.let { hiscoresPanel ->
-//                HiscoresView.searchPlayerForHiscores(username, hiscoresPanel)
-//            } ?: run {
-//                println("hiscoresPanel is null")
-//            }
-//        }
-//    }
+    private fun searchHiscore(username: String): Runnable {
+        return Runnable {
+            setActiveView(HiscoresView.VIEW_NAME)
+            HiscoresView.hiScoreView?.let { hiscoresPanel ->
+                HiscoresView.searchPlayerForHiscores(username, hiscoresPanel)
+            } ?: run {
+                println("hiscoresPanel is null")
+            }
+        }
+    }
 
     private fun restoreSettings(){
         themeName = (GetData("kondoTheme") as? String) ?: "RUNELITE"
@@ -472,27 +472,27 @@ class plugin : Plugin() {
             }
 
             val xpTrackerView = XPTrackerView
-//            val hiscoresView = HiscoresView
+            val hiscoresView = HiscoresView
             val lootTrackerView = LootTrackerView
             val reflectiveEditorView = ReflectiveEditorView
             
             xpTrackerView.createView()
-        /*    hiscoresView.createView()*/
+            hiscoresView.createView()
             lootTrackerView.createView()
             reflectiveEditorView.createView()
             
             views.add(xpTrackerView)
-            //views.add(hiscoresView)
+            views.add(hiscoresView)
             views.add(lootTrackerView)
             views.add(reflectiveEditorView)
             
             xpTrackerView.registerFunctions()
-            //hiscoresView.registerFunctions()
+            hiscoresView.registerFunctions()
             lootTrackerView.registerFunctions()
             reflectiveEditorView.registerFunctions()
 
             mainContentPanel.add(ScrollablePanel(xpTrackerView.panel), xpTrackerView.name)
-            //mainContentPanel.add(ScrollablePanel(hiscoresView.panel), hiscoresView.name)
+            mainContentPanel.add(ScrollablePanel(hiscoresView.panel), hiscoresView.name)
             mainContentPanel.add(ScrollablePanel(lootTrackerView.panel), lootTrackerView.name)
             mainContentPanel.add(ScrollablePanel(reflectiveEditorView.panel), reflectiveEditorView.name)
 
@@ -503,7 +503,7 @@ class plugin : Plugin() {
             }
 
             navPanel.add(createNavButton(xpTrackerView.iconSpriteId, xpTrackerView.name))
-            //navPanel.add(createNavButton(hiscoresView.iconSpriteId, hiscoresView.name))
+            navPanel.add(createNavButton(hiscoresView.iconSpriteId, hiscoresView.name))
             navPanel.add(createNavButton(lootTrackerView.iconSpriteId, lootTrackerView.name))
             navPanel.add(createNavButton(reflectiveEditorView.iconSpriteId, reflectiveEditorView.name))
 

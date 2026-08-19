@@ -15,8 +15,6 @@ import core.tools.SystemLogger.logStartup
 import java.io.File
 import java.io.FileReader
 import java.io.FileWriter
-import java.nio.file.Files
-import java.nio.file.StandardCopyOption
 import javax.script.ScriptEngineManager
 
 class ServerStore : PersistWorld {
@@ -88,21 +86,6 @@ class ServerStore : PersistWorld {
 
         fun setArchive(name: String, data: JSONObject){
             fileMap[name] = data
-        }
-
-        @Synchronized
-        fun saveArchive(name: String) {
-            val storePath = ServerConstants.STORE_PATH ?: return
-            val dir = File(storePath)
-            if (!dir.exists()) dir.mkdirs()
-            val target = File(dir, "$name.json")
-            val temporary = File(dir, ".$name.tmp")
-            FileWriter(temporary).use { it.write(getArchive(name).toJSONString()) }
-            try {
-                Files.move(temporary.toPath(), target.toPath(), StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE)
-            } catch (_: Exception) {
-                Files.move(temporary.toPath(), target.toPath(), StandardCopyOption.REPLACE_EXISTING)
-            }
         }
 
         fun clearDailyEntries() {

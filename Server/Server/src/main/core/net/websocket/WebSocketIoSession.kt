@@ -9,7 +9,7 @@ import java.util.concurrent.ExecutorService
 class WebSocketIoSession(
     private val socket: WebSocket,
     service: ExecutorService
-) : IoSession(null, service, socket.remoteSocketAddress?.toString() ?: "danny-games.servegame.com") {
+) : IoSession(null, service, socket.remoteSocketAddress?.toString() ?: "127.0.0.1") {
 
     override fun queue(buffer: ByteBuffer?) {
         if (buffer == null || !socket.isOpen) {

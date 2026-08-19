@@ -8,7 +8,6 @@ import core.game.world.GameWorld
 import core.net.NioReactor
 import core.net.websocket.GameWebSocketServer
 import core.net.websocket.WebSocketTls
-import core.security.ProductionSafety
 import core.tools.Log
 import core.tools.NetworkReachability
 import core.tools.TimeStamp
@@ -18,9 +17,7 @@ import java.io.FileWriter
 import java.lang.management.ManagementFactory
 import java.lang.management.ThreadMXBean
 import java.net.BindException
-import java.net.InetAddress
-import java.net.InetSocketAddress
-import java.net.Socket
+import java.net.URL
 import java.util.*
 import kotlin.math.max
 import kotlin.system.exitProcess
@@ -70,7 +67,6 @@ object Server {
             log(this::class.java, Log.INFO, "Using config file: ${"worldprops" + File.separator + "default.conf"}")
             ServerConfigParser.parse("worldprops" + File.separator + "default.conf")
         }
-        ProductionSafety.validateConfiguration()
         startTime = System.currentTimeMillis()
         val t = TimeStamp()
         GameWorld.prompt(true)
@@ -151,16 +147,25 @@ object Server {
 
     private fun checkConnectivity(): Boolean
     {
-        val port = 43594 + (GameWorld.settings?.worldId ?: return false)
-        return try {
-            Socket().use { socket ->
-                socket.connect(InetSocketAddress(InetAddress.getLoopbackAddress(), port), ServerConstants.CONNECTIVITY_TIMEOUT)
+        //Has to be done this way because you can't actually ping in Java unless you run the whole thing as root
+        val urls = ServerConstants.CONNECTIVITY_CHECK_URL.split(",")
+        var timeout = ServerConstants.CONNECTIVITY_TIMEOUT
+        if (timeout * urls.size > 5000) //Limit timeout down to 5000ms so other watchdog functions continue as expected.
+            timeout = 5000 / urls.size
+        for (targetUrl in urls) {
+            try {
+                val url = URL(targetUrl)
+                val conn = url.openConnection()
+                conn.connectTimeout = timeout
+                conn.connect()
+                conn.getInputStream().close()
+                return true
+            } catch (e: Exception) {
+                log(this::class.java, Log.WARN, "${targetUrl} failed to respond. Are we offline?")
+                continue
             }
-            true
-        } catch (e: Exception) {
-            log(this::class.java, Log.WARN, "Local game listener on port $port failed to respond.")
-            false
         }
+        return false
     }
 
     @JvmStatic

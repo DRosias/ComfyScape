@@ -540,14 +540,14 @@ public final class client extends GameShell {
 					String xdgHome = System.getenv("XDG_DATA_HOME");
 
 					if (xdgHome != null) {
-						homeDir = xdgHome + "/ComfyScape/";
+						homeDir = xdgHome + "/2009scape/";
 					} else {
-						homeDir += ".local/share/ComfyScape/";
+						homeDir += ".local/share/2009scape/";
 					}
 				} else if (osName.startsWith("mac")) {
-					homeDir += "Library/Application Support/ComfyScape/";
+					homeDir += "Library/Application Support/2009scape/";
 				} else if (osName.startsWith("windows")) {
-					homeDir += "ComfyScape\\";
+					homeDir += "2009scape\\";
 				}
 			} catch (Exception ex) {
 			}

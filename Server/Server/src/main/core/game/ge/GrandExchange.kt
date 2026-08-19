@@ -11,6 +11,7 @@ import core.game.world.GameWorld
 import core.game.world.repository.Repository
 import core.tools.Log
 import core.tools.SystemLogger
+import java.lang.Integer.max
 import java.util.concurrent.LinkedBlockingDeque
 
 /**
@@ -86,11 +87,6 @@ class GrandExchange : StartupListener, Commands {
             notify(player, "Added ${amount}x ${getItemName(id)} to the bot offers.")
         }
 
-        define("gerestock", Privilege.MODERATOR, "::gerestock", "Tops up configured GE bot stock to its target levels.") { player, _ ->
-            val result = GEAutoStock.restock()
-            notify(player, "GE restock: ${result.itemsAdded} items added across ${result.entriesRestocked} offers.")
-        }
-
         define("bange", Privilege.ADMIN, "::bange <lt>item-id<gt>", "Bans/blacklists the specified item from GE trades.") {player, strings ->
             val id = strings[1].toInt()
             PriceIndex.banItem(id)
@@ -108,7 +104,7 @@ class GrandExchange : StartupListener, Commands {
         val pendingOffers = LinkedBlockingDeque<GrandExchangeOffer>()
         private val GET_SPECIFIC_OFFER_BY_UID = "SELECT * FROM player_offers WHERE uid = ?;"
         private val GET_MATCHES_FROM_PLAYER_OFFERS = "SELECT * FROM player_offers WHERE item_id = ? AND is_sale = ? AND offer_state < 4 AND NOT offer_state = 2;"
-        private val GET_MATCH_FROM_BOT_OFFERS = "SELECT * FROM bot_offers WHERE item_id = ? AND amount > 0;"
+        private val GET_MATCH_FROM_BOT_OFFERS = "SELECT * FROM bot_offers WHERE item_id = ?;"
 
         private fun getOfferByUid(uid: Long): GrandExchangeOffer? {
             var offer: GrandExchangeOffer? = null
@@ -126,30 +122,9 @@ class GrandExchange : StartupListener, Commands {
         @JvmStatic
         fun getRecommendedPrice(itemID: Int, from_bot: Boolean = false): Int {
             var base = PriceIndex.getValue(itemID)
-            if (from_bot) base = getFixedBotPrice(itemID)
+            if (from_bot) base = (max(BotPrices.getPrice(itemID), base) * 1.10).toInt()
             return base
         }
-
-        @JvmStatic
-        fun getFixedBotPrice(itemID: Int): Int = (BotPrices.getPrice(itemID) * 1.10).toInt().coerceAtLeast(1)
-
-        @JvmStatic
-        fun getLowestBotSellPrice(itemID: Int): Int? {
-            var price: Int? = null
-            GEDB.run { conn ->
-                conn.prepareStatement("SELECT MIN(offered_value) FROM bot_offers WHERE item_id = ? AND amount > 0").use { query ->
-                    query.setInt(1, itemID)
-                    query.executeQuery().use { result ->
-                        if (result.next() && !result.wasNull()) price = result.getInt(1)
-                    }
-                }
-            }
-            return price
-        }
-
-        @JvmStatic
-        fun getSuggestedBuyPrice(itemID: Int): Int =
-            getLowestBotSellPrice(itemID) ?: getRecommendedPrice(itemID)
 
         @JvmStatic
         fun getOfferStats(itemID: Int, sale: Boolean) : String
@@ -181,7 +156,7 @@ class GrandExchange : StartupListener, Commands {
                     if (bot_offers.next()) {
                         val o = GrandExchangeOffer.fromBotQuery(bot_offers)
                         botAmt = o.amount
-                        botPrice = o.offeredValue
+                        botPrice = getRecommendedPrice(itemID, true)
                     }
 
                     sb.append("Player Stock: <col=FFFFFF>$totalAmount  ")
@@ -223,40 +198,6 @@ class GrandExchange : StartupListener, Commands {
             return true
         }
 
-        fun restockBotOffers(entries: Collection<BotStockEntry>): BotRestockResult {
-            var itemsAdded = 0
-            var entriesRestocked = 0
-            GEDB.run { conn ->
-                conn.prepareStatement("SELECT amount FROM bot_offers WHERE item_id = ?").use { select ->
-                    conn.prepareStatement(
-                        "INSERT INTO bot_offers(item_id, amount, offered_value) VALUES (?, ?, ?) " +
-                            "ON CONFLICT(item_id) DO UPDATE SET " +
-                            "amount = CASE WHEN bot_offers.amount < excluded.amount THEN excluded.amount ELSE bot_offers.amount END, " +
-                            "offered_value = excluded.offered_value"
-                    ).use { upsert ->
-                        for (entry in entries) {
-                            select.setInt(1, entry.itemId)
-                            val results = select.executeQuery()
-                            val currentAmount = if (results.next()) results.getInt("amount") else 0
-                            results.close()
-                            val restoredAmount = (entry.targetStock - currentAmount).coerceAtLeast(0)
-
-                            upsert.setInt(1, entry.itemId)
-                            upsert.setInt(2, entry.targetStock)
-                            upsert.setInt(3, entry.sellPrice)
-                            upsert.executeUpdate()
-
-                            if (restoredAmount > 0) {
-                                entriesRestocked++
-                                itemsAdded += restoredAmount
-                            }
-                        }
-                    }
-                }
-            }
-            return BotRestockResult(entriesRestocked, itemsAdded)
-        }
-
         fun dispatch(player: Player, offer: GrandExchangeOffer) : Boolean
         {
             if ( offer.amount < 1 )
@@ -272,7 +213,7 @@ class GrandExchange : StartupListener, Commands {
             }
 
             if ( player.isArtificial )
-                offer.playerUID = PlayerDetails.getDetails("comfyscape").uid.also { offer.isBot = true }
+                offer.playerUID = PlayerDetails.getDetails("2009scape").uid.also { offer.isBot = true }
             else
                 offer.playerUID = player.details.uid
 
@@ -343,6 +284,16 @@ class GrandExchange : StartupListener, Commands {
             if(canUpdatePriceIndex(seller, buyer))
                 PriceIndex.addTrade(offer.itemID, amount, (totalCoinXC / amount))
 
+/*
+            if (seller.amountLeft > 0) {
+                Discord.postOfferUpdate(true, seller.itemID, seller.offeredValue, seller.amountLeft)
+            }
+
+            if (buyer.amountLeft > 0) {
+                Discord.postOfferUpdate(false, buyer.itemID, buyer.offeredValue, buyer.amountLeft)
+            }
+*/
+
             for (entity in arrayOf(buyer, seller)) {
                 entity.update()
                 val player = Repository.uid_map[entity.playerUID] ?: continue
@@ -383,7 +334,7 @@ class GrandExchange : StartupListener, Commands {
             GEDB.run { conn ->
                 val stmt = conn.createStatement()
 
-                val results = stmt.executeQuery("SELECT item_id,amount,offered_value FROM bot_offers WHERE amount > 0")
+                val results = stmt.executeQuery("SELECT item_id,amount FROM bot_offers WHERE amount > 0")
                 while (results.next()) {
                     val o = GrandExchangeOffer.fromBotQuery(results)
                     offers.add(o)
@@ -412,6 +363,5 @@ class GrandExchange : StartupListener, Commands {
     override fun startup(){
         GEDB.init()
         boot()
-        GEAutoStock.autostock()
     }
 }

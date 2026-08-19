@@ -12,7 +12,6 @@ import core.plugin.Plugin;
 import core.ServerConstants;
 import core.game.interaction.InteractionListeners;
 import content.global.handlers.iface.RulesAndInfo;
-import content.region.misthalin.lumbridge.dialogue.HansDialoguePlugin;
 import core.tools.Log;
 import core.game.world.GameWorld;
 import core.game.world.repository.Repository;
@@ -52,17 +51,6 @@ public final class LoginConfiguration {
      * The lobby interface component.
      */
     private static final Component LOBBY_INTERFACE = new Component(378);
-
-    /**
-     * Lobby components repurposed as the ComfyScape quick-reference panels.
-     */
-    private static final int LOBBY_SERVER_OPTIONS_BODY = 93;
-    private static final int LOBBY_SERVER_OPTIONS_TITLE = 94;
-    private static final int LOBBY_SERVER_OPTIONS_ICON_TEXT = 96;
-    private static final int LOBBY_QUICK_COMMANDS_TITLE = 229;
-    private static final int LOBBY_QUICK_COMMANDS_BODY = 230;
-    private static final int LOBBY_QUICK_COMMANDS_ICON_TEXT = 231;
-    private static final int[] LOBBY_LEGACY_COMPONENTS = {95, 145, 204, 205, 232};
 
     /**
      * The lobby message of the week models & constant to be set for auto selecting the models
@@ -111,32 +99,23 @@ public final class LoginConfiguration {
         setInterfaceText(player, "Welcome to " + ServerConstants.SERVER_NAME, 378, 115);
         setInterfaceText(player, getLastLogin(player), 378, 116);
         setInterfaceText(player, "", 378, 37);
-        setInterfaceText(player,
-                HansDialoguePlugin.hasConfirmedHansSetup(player)
-                        ? "Your server settings are confirmed. You can revisit them at any time."
-                        : "Talk to Hans at home to choose your XP rate and optional server settings.<br>You can choose 1x XP there too.",
-                378, LOBBY_SERVER_OPTIONS_BODY);
-        setInterfaceText(player, "Server Options", 378, LOBBY_SERVER_OPTIONS_TITLE);
-        setInterfaceText(player, "", 378, LOBBY_SERVER_OPTIONS_ICON_TEXT);
-        setInterfaceText(player, "Quick Commands", 378, LOBBY_QUICK_COMMANDS_TITLE);
-        setInterfaceText(player, "::spellbook - choose a spellbook<br>::teleport - visit unlocked places<br>::commands - see all commands", 378, LOBBY_QUICK_COMMANDS_BODY);
-        setInterfaceText(player, "", 378, LOBBY_QUICK_COMMANDS_ICON_TEXT);
+        setInterfaceText(player, "Want to stay up to date with the latest news and updates? Join our discord by using the link on our website!", 378, 38);
+        setInterfaceText(player, "", 378, 39);
+        setInterfaceText(player, "Discord Invite", 378, 14);
+        setInterfaceText(player, "Discord Invite", 378, 129);
+        setInterfaceText(player, "You can gain more credits by reporting bugs and various other methods of contribution.", 378, 93);
+        setInterfaceText(player, player.getDetails().getCredits() + "", 378, 96);
+        setInterfaceText(player, "Credits", 378, 94);
+        setInterfaceText(player, "", 378, 229);
+        setInterfaceText(player, "Want to contribute to " + ServerConstants.SERVER_NAME + "? Visit the GitLab using the link on our website!", 378, 230);
+        setInterfaceText(player, "", 378, 231);
+        setInterfaceText(player, "Github", 378, 240);
         setInterfaceText(player, GameWorld.getSettings().getMessage_string(), messModel, getMessageChild(messModel));
         player.getInterfaceManager().openWindowsPane(LOBBY_PANE);
         player.getInterfaceManager().setOpened(LOBBY_INTERFACE);
         PacketRepository.send(Interface.class, new InterfaceContext(player, LOBBY_PANE.getId(), 2, 378, true));
         PacketRepository.send(Interface.class, new InterfaceContext(player, LOBBY_PANE.getId(), 3, messModel, true));//UPDATE `configs` SET `value`=FLOOR(RAND()*(25-10)+10) WHERE key_="messageInterface"
-        hideLegacyLobbyComponents(player);
         player.getDetails().setLastLogin(System.currentTimeMillis());
-    }
-
-    /**
-     * Removes the inherited credit and social controls while retaining the Play button.
-     */
-    private static void hideLegacyLobbyComponents(Player player) {
-        for (int component : LOBBY_LEGACY_COMPONENTS) {
-            player.getPacketDispatch().sendInterfaceConfig(LOBBY_INTERFACE.getId(), component, true);
-        }
     }
 
     /**

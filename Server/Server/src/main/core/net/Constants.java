@@ -25,6 +25,6 @@ public final class Constants {
 	/**
 	 * The default Management server IP.
 	 */
-	public static final String DEFAULT_MS_IP = "danny-games.servegame.com";
+	public static final String DEFAULT_MS_IP = "127.0.0.1";
 
 }

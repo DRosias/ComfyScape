@@ -11,7 +11,7 @@ import core.game.world.map.RegionManager;
 import core.plugin.Initializable;
 
 /**
- * Created for ComfyScape
+ * Created for 2009Scape
  * User: Ethan Kyle Millard
  * Date: March 25, 2020
  * Time: 8:28 PM

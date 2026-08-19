@@ -402,7 +402,7 @@ class TableListener : InteractionListener {
             closeAllInterfaces(player)
             player.animate(Animation(537))
             queueScript(player, strength = QueueStrength.SOFT) { //do this as a script to allow dropping multiple items in the same tick (authentic)
-                // State can change between queueing the script and executing it at the end of the tick. Sanity check:
+                // It's possible for state to change between queueing the script and executing it at the end of the tick (https://forum.2009scape.org/viewtopic.php?f=8&t=1195-lost-bandos-chestplate-whilst-making-iron-titans&p=5292). So, sanity check:
                 val current = player.inventory.get(used.slot)
                 if (current == null || current !== used) {
                     return@queueScript stopExecuting(player)

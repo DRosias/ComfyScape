@@ -1,6 +1,7 @@
 package core.game.node.entity.player.info;
 
 import core.game.node.entity.player.Player;
+import core.ServerConstants;
 
 /**
  * Represent the rights of a player.
@@ -23,6 +24,11 @@ public enum Rights {
 		Rights c = player.getAttribute("visible_rank", player.getDetails().getRights());
 		if (c != Rights.REGULAR_PLAYER && c != null) {
 			return c.toInteger();
+		}
+		if (ServerConstants.IRONMAN) {
+			if (player.getIronmanManager().isIronman()) {
+				return player.getIronmanManager().getMode().getIcon();
+			}
 		}
 		return 0;
 	}
@@ -50,8 +56,8 @@ public enum Rights {
 	 * @return the credential.
 	 */
 	public static Rights forId(int id) {
-		if (id < 0 || id >= values().length) {
-			return REGULAR_PLAYER;
+		if (id < 0) {
+			id = 0;
 		}
 		return values()[id];
 	}

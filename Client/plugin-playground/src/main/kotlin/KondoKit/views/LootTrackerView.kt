@@ -32,7 +32,7 @@ import java.awt.Component
 import java.awt.event.MouseAdapter
 import java.awt.event.MouseEvent
 import java.awt.image.BufferedImage
-/*import KondoKit.util.GEPriceService*/
+import KondoKit.util.GEPriceService
 import java.text.DecimalFormat
 import javax.swing.*
 import kotlin.math.ceil
@@ -42,7 +42,7 @@ object LootTrackerView : View, OnPostClientTickCallback, OnKillingBlowNPCCallbac
     const val BAG_ICON = 900
     const val OPEN_BAG = 777
     val npcDeathSnapshots = mutableMapOf<Int, GroundSnapshot>()
-    var gePriceMap = 0
+    var gePriceMap = loadGEPrices()
     const val VIEW_NAME = "LOOT_TRACKER_VIEW"
     private val lootItemPanels = mutableMapOf<String, MutableMap<Int, Int>>()
     private val npcKillCounts = mutableMapOf<String, Int>()
@@ -74,7 +74,7 @@ object LootTrackerView : View, OnPostClientTickCallback, OnKillingBlowNPCCallbac
         npcDeathSnapshots[npcID] = GroundSnapshot(preDeathSnapshot, Pair(x, z), 0)
     }
 
-/*    fun loadGEPrices(): Map<String, String> {
+    fun loadGEPrices(): Map<String, String> {
         return if (useLiveGEPrices) {
             println("LootTracker: Loading Remote GE Prices")
             GEPriceService.loadRemotePrices()
@@ -82,7 +82,7 @@ object LootTrackerView : View, OnPostClientTickCallback, OnKillingBlowNPCCallbac
             println("LootTracker: Loading Local GE Prices")
             GEPriceService.loadLocalPrices { Helpers.readResourceText("res/item_configs.json") }
         }
-    }*/
+    }
 
 
 
@@ -232,10 +232,10 @@ object LootTrackerView : View, OnPostClientTickCallback, OnKillingBlowNPCCallbac
 
     fun showCustomToolTip(location: Point, itemId: Int, quantity: Int, parentComponent: ImageCanvas) {
         val itemDef = ObjTypeList.get(itemId)
-        /*val gePricePerItem = gePriceMap[itemDef.id.toString()]?.toInt() ?: 0*/
-        val totalGePrice = 0 * quantity
+        val gePricePerItem = gePriceMap[itemDef.id.toString()]?.toInt() ?: 0
+        val totalGePrice = gePricePerItem * quantity
         val totalHaPrice = itemDef.cost * quantity
-        val geText = if (quantity > 1) " (${formatValue(0)} ea)" else ""
+        val geText = if (quantity > 1) " (${formatValue(gePricePerItem)} ea)" else ""
         val haText = if (quantity > 1) " (${formatValue(itemDef.cost)} ea)" else ""
         val bgColor = Helpers.colorToHex(TOOLTIP_BACKGROUND)
         val textColor = Helpers.colorToHex(secondaryColor)
@@ -374,7 +374,7 @@ object LootTrackerView : View, OnPostClientTickCallback, OnKillingBlowNPCCallbac
         updateKillCountLabel(lootTrackerView, npcName)
         updateTotalKills()
         newDrops.forEach { drop ->
-            val geValue = 0 * drop.quantity
+            val geValue = (gePriceMap[drop.id.toString()]?.toInt() ?: 0) * drop.quantity
             updateValueLabel(lootTrackerView, geValue.toString(), npcName)
             registerDrawAction {  addItemToLootPanel(lootTrackerView, drop, npcName) }
             updateTotalValue(geValue)

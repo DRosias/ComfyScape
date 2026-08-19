@@ -126,38 +126,44 @@ public final class SignLink implements Runnable {
 		if (cachedFile != null) {
 			return cachedFile;
 		}
-		if (homeDir == null || homeDir.length() == 0) {
-			throw new RuntimeException("Unable to determine the client cache directory.");
-		}
-
-		File cacheDirectory = new File(homeDir, "cache");
-		if (cacheSubDir != null) {
-			cacheDirectory = new File(cacheDirectory, cacheSubDir);
-		}
-		if (!cacheDirectory.isDirectory() && !cacheDirectory.mkdirs()) {
-			throw new RuntimeException("Unable to create client cache directory: " + cacheDirectory);
-		}
-
-		File file = new File(cacheDirectory, name);
-		RandomAccessFile randomAccessFile = null;
-		try {
-			randomAccessFile = new RandomAccessFile(file, "rw");
-			int firstByte = randomAccessFile.read();
-			randomAccessFile.seek(0L);
-			randomAccessFile.write(firstByte);
-			randomAccessFile.seek(0L);
-			randomAccessFile.close();
-			fileCache.put(name, file);
-			return file;
-		} catch (Exception ex) {
-			try {
-				if (randomAccessFile != null) {
-					randomAccessFile.close();
+		@Pc(53) String[] cacheLocations = new String[]{homeDir, "c:/rscache/", "/rscache/", "c:/windows/", "c:/winnt/", "c:/", "/tmp/", ""};
+		@Pc(78) String[] cacheDirs = new String[]{"cache", ".runite_rs", ".530file_store_" + storeId, ".jagex_cache_" + storeId, ".file_store_" + storeId};
+		for (@Pc(80) int attempt = 0; attempt < 2; attempt++) {
+			for (@Pc(87) int i = 0; i < cacheDirs.length; i++) {
+				for (@Pc(93) int j = 0; j < cacheLocations.length; j++) {
+					@Pc(128) String path = cacheLocations[j] + cacheDirs[i] + "/" + (cacheSubDir == null ? "" : cacheSubDir + "/") + name;
+					@Pc(130) RandomAccessFile randomAccessFile = null;
+					try {
+						@Pc(135) File file = new File(path);
+						if (attempt != 0 || file.exists()) {
+							@Pc(145) String cacheLocation = cacheLocations[j];
+							if (attempt != 1 || cacheLocation.length() <= 0 || (new File(cacheLocation)).exists()) {
+								(new File(cacheLocations[j] + cacheDirs[i])).mkdir();
+								if (cacheSubDir != null) {
+									(new File(cacheLocations[j] + cacheDirs[i] + "/" + cacheSubDir)).mkdir();
+								}
+								randomAccessFile = new RandomAccessFile(file, "rw");
+								@Pc(210) int firstByte = randomAccessFile.read();
+								randomAccessFile.seek(0L);
+								randomAccessFile.write(firstByte);
+								randomAccessFile.seek(0L);
+								randomAccessFile.close();
+								fileCache.put(name, file);
+								return file;
+							}
+						}
+					} catch (@Pc(229) Exception ex) {
+						try {
+							if (randomAccessFile != null) {
+								randomAccessFile.close();
+							}
+						} catch (@Pc(239) Exception ex2) {
+						}
+					}
 				}
-			} catch (Exception ignored) {
 			}
-			throw new RuntimeException("Unable to access client cache file: " + file, ex);
 		}
+		throw new RuntimeException();
 	}
 
 	@OriginalMember(owner = "signlink!ll", name = "<init>", descriptor = "(Ljava/applet/Applet;ILjava/lang/String;I)V")
@@ -201,14 +207,14 @@ public final class SignLink implements Runnable {
 					String xdgHome = System.getenv("XDG_DATA_HOME");
 
 					if (xdgHome != null) {
-						homeDir = xdgHome + "/ComfyScape/";
+						homeDir = xdgHome + "/2009scape/";
 					} else {
-						homeDir += ".local/share/ComfyScape/";
+						homeDir += ".local/share/2009scape/";
 					}
 				} else if (osName.startsWith("mac")) {
-					homeDir += "Library/Application Support/ComfyScape/";
+					homeDir += "Library/Application Support/2009scape/";
 				} else if (osName.startsWith("windows")) {
-					homeDir += "ComfyScape\\";
+					homeDir += "2009scape\\";
 				}
 			} catch (@Pc(86) Exception ex) {
 			}

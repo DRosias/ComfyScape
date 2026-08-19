@@ -60,7 +60,7 @@ class StatsCommandSet : CommandSet(Privilege.STANDARD) {
                             70 -> sendLine(player, SPACER,i)
                             71 -> sendLine(player,"Slayer Tasks: ${SlayerManager.getInstance(queryPlayer).flags.completedTasks}",i)
                             72 -> sendLine(player,"Quest Points: ${queryPlayer.questRepository.points}",i)
-                            73 -> sendLine(player, SPACER,i)
+                            73 -> sendLine(player,"Ironman Mode: ${queryPlayer.ironmanManager.mode.name.lowercase(Locale.getDefault())}",i)
                             74 -> sendLine(player,"Deaths: ${queryPlayer.getAttribute("$STATS_BASE:$STATS_DEATHS",0)}",i)
                             75 -> sendLine(player, SPACER,i)
                             76 -> sendLine(player,"Logs Chopped: ${queryPlayer.getAttribute("$STATS_BASE:$STATS_LOGS",0)}",i)

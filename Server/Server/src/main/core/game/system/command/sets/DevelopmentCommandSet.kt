@@ -3,15 +3,12 @@ package core.game.system.command.sets
 import content.global.activity.jobs.JobManager
 import content.global.skill.construction.decoration.pohstorage.Storable
 import content.global.skill.construction.decoration.pohstorage.StorableFamily
-import content.data.Quests
-import content.global.skill.magic.SpellbookSwitcher
 import core.api.*
 import core.cache.Cache
 import core.cache.def.impl.DataMap
 import core.cache.def.impl.NPCDefinition
 import core.cache.def.impl.VarbitDefinition
 import core.cache.def.impl.Struct
-import core.game.dialogue.DialogueFile
 import core.game.node.entity.combat.ImpactHandler.HitsplatType
 import core.game.node.entity.npc.NPC
 import core.game.node.entity.player.Player
@@ -31,6 +28,7 @@ import java.io.FileWriter
 import java.util.Arrays
 import core.net.packet.PacketWriteQueue
 import core.tools.Log
+import core.game.node.entity.player.info.Rights
 import core.game.node.entity.skill.Skills
 import core.game.world.map.Location
 import core.game.world.map.RegionManager.getLocalEntitys
@@ -157,20 +155,17 @@ class DevelopmentCommandSet : CommandSet(Privilege.ADMIN) {
             sendMessage(player, "Job cleared successfully.")
         }
 
-        define("region", Privilege.ADMIN, "", "Prints your current Region ID.") {player, args ->
+        define("region", Privilege.STANDARD, "", "Prints your current Region ID.") {player, args ->
             sendMessage(player, "Region ID: ${player.viewport.region.regionId}")
         }
 
-        define("spellbook", Privilege.STANDARD, "::spellbook [normal|ancients|lunar]", "Switches to an already unlocked spellbook."){player, args ->
-            if (args.size < 2) {
-                openSpellbookDialogue(player)
-            } else {
-                val spellBook = spellBookFor(args[1]) ?: run {
-                    reject(player, "Usage: ::spellbook normal|ancients|lunar")
-                    return@define
-                }
-                switchSpellbook(player, spellBook)
+        define("spellbook", Privilege.ADMIN, "::spellbook <lt>book ID<gt> (0 = MODERN, 1 = ANCIENTS, 2 = LUNARS)", "Swaps your spellbook to the given book ID."){player, args ->
+            if(args.size < 2){
+                reject(player,"Usage: ::spellbook [int]. 0 = MODERN, 1 = ANCIENTS, 2 = LUNARS")
             }
+            val spellBook = SpellBookManager.SpellBook.values()[args[1].toInt()]
+            player.spellBookManager.setSpellBook(spellBook)
+            player.spellBookManager.update(player)
         }
 
         define("killme", Privilege.ADMIN, description = "Literally kills you in-game even") { player, _ ->
@@ -292,7 +287,7 @@ class DevelopmentCommandSet : CommandSet(Privilege.ADMIN) {
             PacketWriteQueue.write(ResetInterface(), PlayerContext(player))
         }
 
-        define("npcsearch", Privilege.ADMIN, "::npcsearch <lt>name<gt>", "Searches for NPCs that match the name either in main or children.") {player, strings ->
+        define("npcsearch", Privilege.STANDARD, "::npcsearch <lt>name<gt>", "Searches for NPCs that match the name either in main or children.") {player, strings ->
             val name = strings.slice(1 until strings.size).joinToString(" ").lowercase()
             for (id in 0 until 9000) {
                 val def = NPCDefinition.forId(id)
@@ -310,7 +305,7 @@ class DevelopmentCommandSet : CommandSet(Privilege.ADMIN) {
             }
         }
 
-        define("itemsearch", Privilege.ADMIN, "::itemsearch <lt>name<gt>", "Searches for items that match the name.") {player, args ->
+        define("itemsearch", Privilege.STANDARD, "::itemsearch <lt>name<gt>", "Searches for items that match the name.") {player, args ->
             val itemName = args.copyOfRange(1, args.size).joinToString(" ").lowercase()
             for (i in 0 until 15000) {
                 val name = getItemName(i).lowercase()
@@ -399,6 +394,18 @@ class DevelopmentCommandSet : CommandSet(Privilege.ADMIN) {
                 reject(player, "No valid 'points' argument given")
             }
             target.savedData.activityData.pestPoints = points!!
+        }
+
+        define("makeadmin", Privilege.ADMIN, "::makeadmin <lt>player_name<gt>", "Permanently gives admin rights to player_name (or self if empty)") { player, args ->
+            val target = getPlayerFromArgs(player, args, 1) ?: return@define
+            target.details.rights = Rights.ADMINISTRATOR
+            sendMessage(player, "Gave admin rights to ${target.username}.")
+            sendMessage(target, "You've been given admin rights by ${player.username}!")
+        }
+
+        define("dropadmin", Privilege.ADMIN, "::dropadmin", "Permanently drops admin rights from self") { player, _ ->
+            player.details.rights = Rights.REGULAR_PLAYER
+            sendMessage(player, "Dropped admin rights.")
         }
 
         define("max", Privilege.ADMIN, "::max <lt>player_name<gt>", "Sets all skills to 99s for <lt>player_name<gt> (or self if empty)") { player, args ->
@@ -502,61 +509,4 @@ class DevelopmentCommandSet : CommandSet(Privilege.ADMIN) {
         }
 
         }
-
-    private fun openSpellbookDialogue(player: Player) {
-        player.dialogueInterpreter.open(object : DialogueFile() {
-            override fun handle(componentID: Int, buttonID: Int) {
-                when (stage) {
-                    0 -> {
-                        options("Normal", "Ancient", "Lunar", title = "Choose a spellbook")
-                        stage = 1
-                    }
-                    1 -> {
-                        end()
-                        when (buttonID) {
-                            1 -> switchSpellbook(player, SpellBookManager.SpellBook.MODERN)
-                            2 -> switchSpellbook(player, SpellBookManager.SpellBook.ANCIENT)
-                            3 -> switchSpellbook(player, SpellBookManager.SpellBook.LUNAR)
-                        }
-                    }
-                }
-            }
-        })
-    }
-
-    private fun spellBookFor(argument: String): SpellBookManager.SpellBook? = when (argument.lowercase()) {
-        "normal", "modern" -> SpellBookManager.SpellBook.MODERN
-        "ancient", "ancients" -> SpellBookManager.SpellBook.ANCIENT
-        "lunar", "lunars" -> SpellBookManager.SpellBook.LUNAR
-        else -> null
-    }
-
-    private fun switchSpellbook(player: Player, spellBook: SpellBookManager.SpellBook) {
-        if (!player.allowRemoval()) {
-            sendMessage(player, "You cannot switch spellbooks right now.")
-            return
-        }
-
-        when (spellBook) {
-            SpellBookManager.SpellBook.ANCIENT -> if (!hasRequirement(player, Quests.DESERT_TREASURE, false)) {
-                sendMessage(player, "You haven't unlocked the Ancient Magicks yet.")
-                return
-            }
-            SpellBookManager.SpellBook.LUNAR -> if (!hasRequirement(player, Quests.LUNAR_DIPLOMACY, false)) {
-                sendMessage(player, "You haven't unlocked the Lunar spellbook yet.")
-                return
-            }
-            SpellBookManager.SpellBook.MODERN -> Unit
-        }
-
-        if (SpellbookSwitcher.switch(player, spellBook, SpellBookManager.SpellbookChangeSource.SPELLBOOK_COMMAND)) {
-            sendMessage(player, "${when (spellBook) {
-                SpellBookManager.SpellBook.MODERN -> "Normal"
-                SpellBookManager.SpellBook.ANCIENT -> "Ancient"
-                SpellBookManager.SpellBook.LUNAR -> "Lunar"
-            }} spellbook activated.")
-        } else {
-            sendMessage(player, "You are already using that spellbook.")
-        }
-    }
 }

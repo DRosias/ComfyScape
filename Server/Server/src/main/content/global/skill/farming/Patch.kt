@@ -418,7 +418,7 @@ class Patch(val player: Player, val patch: FarmingPatch, var plantable: Plantabl
     }
 
     fun plant(plantable: Plantable){
-        nextGrowth = System.currentTimeMillis() + acceleratedGrowthMillis(plantable.applicablePatch.stageGrowthTime)
+        nextGrowth = System.currentTimeMillis() + TimeUnit.MINUTES.toMillis(plantable.applicablePatch.stageGrowthTime.toLong())
         this.plantable = plantable
         isDead = false
         isDiseased = false
@@ -456,18 +456,6 @@ class Patch(val player: Player, val patch: FarmingPatch, var plantable: Plantabl
             minutes = 5
         }
         return minutes
-    }
-
-    fun getStageGrowthMillis(): Long {
-        val minutes = getStageGrowthMinutes()
-        return if (!isGrown()) acceleratedGrowthMillis(minutes) else TimeUnit.MINUTES.toMillis(minutes.toLong())
-    }
-
-    private fun acceleratedGrowthMillis(minutes: Int): Long =
-        TimeUnit.MINUTES.toMillis(minutes.toLong()) / FARMING_GROWTH_MULTIPLIER
-
-    companion object {
-        private const val FARMING_GROWTH_MULTIPLIER = 10L
     }
 
     fun isFlowerProtected(): Boolean{

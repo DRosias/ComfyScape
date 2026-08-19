@@ -94,9 +94,9 @@ public class RangedTutorDialogue extends DialoguePlugin {
 	public boolean handle(int interfaceId, int buttonId) {
 		switch (stage) {
 		case 230:
-			final Item arrows = new Item(ARROW.getId(), 50);
+			final Item arrows = new Item(ARROW.getId(), 25);
 			if (player.getInventory().add(arrows)) {
-				interpreter.sendItemMessage(arrows, "Nemarti gives you 50 training arrows. They can only be used with the Training Shortbow.");
+				interpreter.sendItemMessage(arrows, "Nemarti gives you 25 training arrows. They can only be used with the Training Shortbow.");
 				stage = 231;
 				player.getSavedData().getGlobalData().setTutorClaim(System.currentTimeMillis() + 1800000);
 				return true;

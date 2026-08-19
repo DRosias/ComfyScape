@@ -10,6 +10,7 @@ import core.game.world.map.Location
 import core.game.world.map.RegionManager
 import core.game.world.update.flag.context.ChatMessage
 import core.game.world.update.flag.*
+import core.integrations.discord.Discord
 import org.json.simple.JSONArray
 import org.json.simple.JSONObject
 import org.json.simple.parser.JSONParser
@@ -216,6 +217,10 @@ class DoublingMoney : Script() {
                 playerNetPoL += coinsFromBot
                 playerNetPoL -= playerTradeModule!!.container!!.getAmount(Items.COINS_995)
                 player.setAttribute("double-money-net-pol", playerNetPoL.toString())
+                // if playerNetPoL > 100k, send a Discord notification
+                if (playerNetPoL > 100_000) {
+                    Discord.postPlayerAlert(player.username, "Made too much off Doubling Money bots: ${playerNetPoL / 1000}k")
+                }
             }
             // If we're in scamMode, we cannot actually setAccepted to true if we're giving away coins! (Gotta fake em out ;)
             if (scamMode && botTradeModule.getInterface() == TradeModule.ACCEPT_INTERFACE && coinsFromBot > 0) {

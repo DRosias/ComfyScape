@@ -15,7 +15,7 @@ class EvilBobNPC(override var loot: WeightBasedTable? = null) : RandomEventNPC(N
         face(player)
         kidnapPlayer(this, player, Location(3419, 4776, 0), "No... what? Nooooooooooooo!") { player, _ ->
             EvilBobUtils.giveEventFishingSpot(player)
-            sendMessage(player, "Welcome to ComfyScape.")
+            sendMessage(player, "Welcome to Scape2009.")
             openDialogue(player, EvilBobDialogue(), NPCs.EVIL_BOB_2479)
         }
     }

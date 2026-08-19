@@ -10,7 +10,7 @@ import core.net.packet.out.CameraViewPacket
  *
  * @property player
  * @constructor Create empty Player camera
- * **See Also:** Archived server-side camera movement documentation.
+ * **See Also:** [This forum post](https://forum.2009scape.org/viewtopic.php?t=173-in-game-camera-movement-documentation-server-sided)
  *
  * WARNING: Playing around with camera values may potentially trigger seizures for people with photosensitive epilepsy.
  * Please use care when using camera values.

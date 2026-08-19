@@ -15,8 +15,6 @@ import core.game.system.task.Pulse
 import core.game.world.GameWorld
 import core.game.world.map.Location
 import core.game.world.map.RegionManager
-import core.game.world.map.build.DynamicRegion
-import core.game.world.map.zone.ZoneRestriction
 import core.game.world.repository.Repository.getPlayerByName
 import core.game.world.update.flag.context.Animation
 import core.game.world.update.flag.context.Graphics
@@ -124,7 +122,7 @@ class FunCommandSet : CommandSet(Privilege.ADMIN) {
         /**
          * Transform a player's appearance into that of an NPC.
          */
-        define("pnpc", Privilege.ADMIN, "::pnpc <lt>NPC ID<gt>", "Transforms the player into the given NPC."){ player, args ->
+        define("pnpc", Privilege.MODERATOR, "::pnpc <lt>NPC ID<gt>", "Transforms the player into the given NPC."){ player, args ->
             if(args.size < 2){
                 reject(player, "Usage: ::pnpc <npcid>")
                 return@define
@@ -143,12 +141,8 @@ class FunCommandSet : CommandSet(Privilege.ADMIN) {
         /**
          * Open bank
          */
-        define("bank", Privilege.STANDARD, "", "Opens your bank."){ player, _ ->
-            if (!canUseRemoteBank(player)) {
-                reject(player, "You cannot use ::bank during PvP, combat, activities, instances, or other restricted states.")
-                return@define
-            }
-            openBankAccount(player)
+        define("bank", Privilege.ADMIN, "", "Opens your bank."){ player, _ ->
+            player.getBank().open()
         }
 
         /**
@@ -213,14 +207,14 @@ class FunCommandSet : CommandSet(Privilege.ADMIN) {
         /**
          * Opens up the makeover interface
          */
-        define("makeover", Privilege.ADMIN, description = "Opens the makeover interface for your character."){ player, _ ->
+        define("makeover", Privilege.MODERATOR, description = "Opens the makeover interface for your character."){ player, _ ->
             CharacterDesign.open(player)
         }
 
         /**
          * Copies your current appearance and equipment as JSON to the clipboard
          */
-        define("dumpappearance", Privilege.ADMIN, description = "Copies your appearance and equipment as JSON to the clipboard."){ player, _ ->
+        define("dumpappearance", Privilege.MODERATOR, description = "Copies your appearance and equipment as JSON to the clipboard."){ player, _ ->
             val json = JSONObject()
             PlayerSaver(player).saveAppearance(json)
             val equipJson = PlayerSaver(player).saveContainer(player.equipment)
@@ -495,15 +489,6 @@ class FunCommandSet : CommandSet(Privilege.ADMIN) {
         }
         val archive = ServerStore.getArchive(TREASURE_KEY)
         archive["data"] = array
-    }
-
-    private fun canUseRemoteBank(player: Player): Boolean {
-        if (!player.allowRemoval() || player.skullManager.isWilderness || GameWorld.settings?.isPvp == true) return false
-        if (player.getAttribute<Any?>("activity", null) != null || player.interfaceManager.isOpened) return false
-        if (player.locks.isInteractionLocked || player.locks.isMovementLocked || player.locks.isTeleportLocked) return false
-        if (player.viewport.region is DynamicRegion) return false
-        return !player.zoneMonitor.isRestricted(ZoneRestriction.OFF_MAP) &&
-            !player.zoneMonitor.isRestricted(ZoneRestriction.TELEPORT)
     }
 
     private data class BuriedTreasure(

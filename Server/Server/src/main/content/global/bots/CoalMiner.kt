@@ -118,7 +118,7 @@ class CoalMiner : Script() {
             }
 
             State.SELLING -> {
-                scriptAPI.discardBankedOutput(Items.COAL_453)
+                scriptAPI.sellOnGE(Items.COAL_453)
                 state = State.GO_BACK
             }
 

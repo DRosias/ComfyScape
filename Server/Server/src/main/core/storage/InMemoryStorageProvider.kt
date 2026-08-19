@@ -33,6 +33,4 @@ class InMemoryStorageProvider : AccountStorageProvider {
     override fun getUsernamesWithIP(ip: String): List<String> {
         return ArrayList()
     }
-
-    override fun getElevatedAccounts(): List<UserAccountInfo> = storage.values.filter { it.rights != 0 }
 }

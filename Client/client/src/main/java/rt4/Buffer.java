@@ -164,6 +164,7 @@ public class Buffer extends Node {
 		this.offset = start;
 	}
 
+	@OriginalMember(owner = "client!wa", name = "a", descriptor = "(Ljava/math/BigInteger;Ljava/math/BigInteger;I)V")
 	public final void rsaenc(@OriginalArg(0) BigInteger exp, @OriginalArg(1) BigInteger mod) {
 		@Pc(2) int len = this.offset;
 		this.offset = 0;
@@ -171,18 +172,7 @@ public class Buffer extends Node {
 		this.gdata(len, plaintextBytes);
 		@Pc(23) BigInteger plaintext = new BigInteger(plaintextBytes);
 		@Pc(28) BigInteger ciphertext = plaintext.modPow(exp, mod);
-
-		int modLen = (mod.bitLength() + 7) / 8; // 128 for a 1024-bit modulus
-		byte[] raw = ciphertext.toByteArray();
-		@Pc(38) byte[] ciphertextBytes = new byte[modLen];
-		if (raw.length >= modLen) {
-			// strip any leading sign byte(s) - keep the last modLen bytes
-			System.arraycopy(raw, raw.length - modLen, ciphertextBytes, 0, modLen);
-		} else {
-			// pad with leading zeros in the rare case it's short
-			System.arraycopy(raw, 0, ciphertextBytes, modLen - raw.length, raw.length);
-		}
-
+		@Pc(38) byte[] ciphertextBytes = ciphertext.toByteArray();
 		this.offset = 0;
 		this.p1(ciphertextBytes.length);
 		this.pdata(ciphertextBytes, ciphertextBytes.length);

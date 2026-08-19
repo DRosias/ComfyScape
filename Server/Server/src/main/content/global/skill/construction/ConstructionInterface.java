@@ -49,7 +49,7 @@ public final class ConstructionInterface extends ComponentPlugin {
 							log(this.getClass(), Log.ERR,  "Failed building decoration " + slot + "/" + hotspot.getHotspot().getDecorations().length);
 							break;
 						}
-						boolean debug = player.isAdmin();
+						boolean debug = player.isStaff();
 						Decoration deco = hotspot.getHotspot().getDecorations()[slot];
 						if (!debug) {
 							if (player.getSkills().getLevel(Skills.CONSTRUCTION) < deco.getLevel()) {

@@ -84,7 +84,7 @@ class SeersMagicTrees : Script(){
 
             State.SELL_GE -> {
                 state = State.TELE_SEERS
-                scriptAPI.discardBankedOutput(Items.MAGIC_LOGS_1513)
+                scriptAPI.sellOnGE(Items.MAGIC_LOGS_1513)
             }
 
             State.TELE_SEERS -> {

@@ -78,8 +78,6 @@ object ServerConfigParser {
             msAddress = data.getString("server.msip"),
             enable_default_clan = data.getBoolean("world.enable_default_clan"),
             enable_bots = data.getBoolean("world.enable_bots"),
-            enable_ambient_bots = data.getBoolean("world.enable_ambient_bots", false),
-            enable_economy_bots = data.getBoolean("world.enable_economy_bots", false),
             autostock_ge = data.getBoolean("world.autostock_ge"),
             allow_token_purchase = data.getBoolean("world.allow_token_purchase"),
             skillcape_perks = data.getBoolean("world.skillcape_perks"),
@@ -103,11 +101,11 @@ object ServerConfigParser {
 
         ServerConstants.DATA_PATH = data.getString("paths.data_path")
         ServerConstants.WRITE_LOGS = data.getBoolean("server.write_logs")
-        ServerConstants.DATABASE_NAME = env("COMFYSCAPE_DB_NAME", data.getString("database.database_name"), "MYSQL_DATABASE")
-        ServerConstants.DATABASE_USER = env("COMFYSCAPE_DB_USERNAME", data.getString("database.database_username"), "MYSQL_USER")
-        ServerConstants.DATABASE_PASS = env("COMFYSCAPE_DB_PASSWORD", data.getString("database.database_password"), "MYSQL_PASSWORD")
-        ServerConstants.DATABASE_ADDRESS = env("COMFYSCAPE_DB_ADDRESS", data.getString("database.database_address"))
-        ServerConstants.DATABASE_PORT = env("COMFYSCAPE_DB_PORT", data.getString("database.database_port"))
+        ServerConstants.DATABASE_NAME = data.getString("database.database_name")
+        ServerConstants.DATABASE_USER = data.getString("database.database_username")
+        ServerConstants.DATABASE_PASS = data.getString("database.database_password")
+        ServerConstants.DATABASE_ADDRESS = data.getString("database.database_address")
+        ServerConstants.DATABASE_PORT = data.getString("database.database_port")
         ServerConstants.DATABASE = Database(ServerConstants.DATABASE_ADDRESS + ":" + ServerConstants.DATABASE_PORT, ServerConstants.DATABASE_NAME, ServerConstants.DATABASE_USER, ServerConstants.DATABASE_PASS)
         ServerConstants.CACHE_PATH = data.getPath("paths.cache_path")
         ServerConstants.CONFIG_PATH = data.getPath("paths.configs_path")
@@ -118,7 +116,7 @@ object ServerConfigParser {
         ServerConstants.LOGS_PATH = data.getPath("paths.logs_path")
         ServerConstants.SERVER_NAME = data.getPath("world.name")
         ServerConstants.BOT_DATA_PATH = data.getPath("paths.bot_data")
-        ServerConstants.MS_SECRET_KEY = env("COMFYSCAPE_MANAGEMENT_SECRET", data.getString("server.secret_key", ""))
+        ServerConstants.MS_SECRET_KEY = data.getString("server.secret_key")
         ServerConstants.HOME_LOCATION = parseLocation(data.getString("world.home_location"))
         ServerConstants.START_LOCATION = parseLocation(data.getString("world.new_player_location"))
         ServerConstants.DAILY_RESTART = data.getBoolean("world.daily_restart")
@@ -138,20 +136,20 @@ object ServerConfigParser {
         ServerConstants.BANK_BOOTH_QUICK_OPEN = data.getBoolean("world.bank_booth_quick_open", false)
         ServerConstants.BANK_BOOTH_NOTE_ENABLED = data.getBoolean("world.bank_booth_note_enabled", true)
         ServerConstants.BANK_BOOTH_NOTE_UIM = data.getBoolean("world.bank_booth_note_uim", true)
+        ServerConstants.DISCORD_GE_WEBHOOK = data.getString("integrations.discord_ge_webhook", "")
         ServerConstants.WATCHDOG_ENABLED = data.getBoolean("server.watchdog_enabled", true)
         ServerConstants.I_AM_A_CHEATER = data.getBoolean("world.i_want_to_cheat", false)
         ServerConstants.USE_AUTH = data.getBoolean("server.use_auth", true)
         ServerConstants.PERSIST_ACCOUNTS = data.getBoolean("server.persist_accounts", true)
         ServerConstants.DAILY_ACCOUNT_LIMIT = data.getLong("server.daily_accounts_per_ip", 3L).toInt()
-        ServerConstants.STARTING_CREDITS = data.getLong("server.starting_credits", 2000L).toInt().coerceAtLeast(0)
-        ServerConstants.PRODUCTION_MODE = data.getBoolean("security.production_mode", true)
-        ServerConstants.OWNER_ACCOUNTS = accountList(data, "security.owner_accounts", "COMFYSCAPE_OWNER_ACCOUNTS")
-        ServerConstants.MODERATOR_ACCOUNTS = accountList(data, "security.moderator_accounts", "COMFYSCAPE_MODERATOR_ACCOUNTS")
+        ServerConstants.DISCORD_MOD_WEBHOOK = data.getString("integrations.discord_moderation_webhook", "")
+        ServerConstants.NOAUTH_DEFAULT_ADMIN = data.getBoolean("server.noauth_default_admin", false)
         ServerConstants.DRAGON_AXE_USE_OSRS_SPEC = data.getBoolean("world.dragon_axe_use_osrs_spec", false)
+        ServerConstants.DISCORD_OPENRSC_HOOK = data.getString("integrations.openrsc_integration_webhook", "")
         ServerConstants.ENABLE_GLOBAL_CHAT = data.getBoolean("world.enable_global_chat", false)
         ServerConstants.MAX_PATHFIND_DISTANCE = data.getLong("server.max_pathfind_dist", 25L).toInt()
         ServerConstants.XP_RATES = data.getBoolean("world.xp_rates", false)
-        ServerConstants.GE_AUTOSTOCK_ENABLED = data.getBoolean("world.autostock_ge", false)
+        ServerConstants.IRONMAN = data.getBoolean("world.ironman", false)
         ServerConstants.PLAYER_STOCK_CLEAR_INTERVAL = data.getLong("world.playerstock_clear_mins", 180L).toInt()
         ServerConstants.PLAYER_STOCK_RECIRCULATE = data.getBoolean("world.playerstock_bot_offers", true)
         ServerConstants.BOTSTOCK_LIMIT = data.getLong("world.botstock_limit", 5000L).toInt()
@@ -176,27 +174,16 @@ object ServerConfigParser {
         ServerConstants.SECOND_BANK = data.getBoolean("world.second_bank", false)
         ServerConstants.PLAYER_COMMANDS = data.getBoolean("world.player_commands", false)
         ServerConstants.BOOSTED_TRAWLER_REWARDS = data.getBoolean("world.boosted_trawler_rewards", false)
+        ServerConstants.CONNECTIVITY_CHECK_URL = data.getString("server.connectivity_check_url", "https://google.com,https://2009scape.org")
         ServerConstants.CONNECTIVITY_TIMEOUT = data.getLong("server.connectivity_timeout", 500L).toInt()
         ServerConstants.WEBSOCKET_ENABLED = data.getBoolean("server.websocket_enabled", false)
         ServerConstants.WEBSOCKET_PORT = data.getLong("server.websocket_port", 0L).toInt()
         ServerConstants.WEBSOCKET_TLS_ENABLED = data.getBoolean("server.websocket_tls_enabled", false)
         ServerConstants.WEBSOCKET_TLS_KEYSTORE_PATH = data.getString("server.websocket_tls_keystore_path", "")
-        ServerConstants.WEBSOCKET_TLS_KEYSTORE_PASSWORD = env("COMFYSCAPE_WEBSOCKET_KEYSTORE_PASSWORD", data.getString("server.websocket_tls_keystore_password", ""))
+        ServerConstants.WEBSOCKET_TLS_KEYSTORE_PASSWORD = data.getString("server.websocket_tls_keystore_password", "")
 
         val logLevel = data.getString("server.log_level", "VERBOSE").uppercase()
         ServerConstants.LOG_LEVEL = parseEnumEntry<LogLevel>(logLevel) ?: LogLevel.VERBOSE
-    }
-
-    private fun env(name: String, fallback: String, legacyName: String? = null): String {
-        return System.getenv(name)?.takeIf { it.isNotBlank() }
-            ?: legacyName?.let { System.getenv(it)?.takeIf(String::isNotBlank) }
-            ?: fallback
-    }
-
-    private fun accountList(data: Toml, key: String, environmentName: String): Set<String> {
-        val configured = System.getenv(environmentName)?.takeIf { it.isNotBlank() }?.split(",")
-            ?: data.getList<String>(key, emptyList())
-        return configured.map { it.trim().lowercase() }.filter { it.isNotEmpty() }.toSet()
     }
 
 

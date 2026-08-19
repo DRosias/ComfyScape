@@ -18,7 +18,6 @@ import core.game.system.command.CommandMapping
 import core.game.system.command.Privilege
 import core.game.world.GameWorld
 import core.game.world.repository.Repository
-import core.security.RolePolicy
 import java.io.File
 import java.io.FileReader
 import java.util.concurrent.TimeUnit
@@ -39,12 +38,8 @@ class ModerationCommandSet : CommandSet(Privilege.MODERATOR){
          * =============================================================================================================
          */
         define("kick", Privilege.MODERATOR, "::kick <player>", "Disconnects the specified player from the game."){ player, args ->
-            val playerToKick: Player? = args.getOrNull(1)?.let(Repository::getPlayerByName)
+            val playerToKick: Player? = Repository.getPlayerByName(args[1])
             if (playerToKick != null) {
-                if (player.rights == Rights.PLAYER_MODERATOR && playerToKick.rights == Rights.ADMINISTRATOR) {
-                    reject(player, "Mods cannot kick the owner.")
-                    return@define
-                }
                 playerToKick.clear()
                 notify(player, "Player ${playerToKick.username} was kicked.")
             } else {
@@ -159,7 +154,7 @@ class ModerationCommandSet : CommandSet(Privilege.MODERATOR){
          * Mute a player
          * =============================================================================================================
          */
-        define("mute", Privilege.ADMIN, "::mute <lt>USERNAME<gt> <lt>TIME<gt>", "Mutes the user. Time format: <lt>INT<gt>d/s/m/h ex: 30d for 30 days."){ player, args ->
+        define("mute", Privilege.MODERATOR, "::mute <lt>USERNAME<gt> <lt>TIME<gt>", "Mutes the user. Time format: <lt>INT<gt>d/s/m/h ex: 30d for 30 days."){ player, args ->
             val name = args[1]
             if(!GameWorld.accountStorage.checkUsernameTaken(name)) {
                 reject(player, "Invalid username: $name")
@@ -207,7 +202,7 @@ class ModerationCommandSet : CommandSet(Privilege.MODERATOR){
          * Jail a player
          * =============================================================================================================
          */
-        define("jail", Privilege.ADMIN, "::jail <lt>SECONDS<gt> <lt>USERNAME<gt>", "Sends the player to the jail cells in Varrock."){player,args ->
+        define("jail", Privilege.MODERATOR, "::jail <lt>SECONDS<gt> <lt>USERNAME<gt>", "Sends the player to the jail cells in Varrock."){player,args ->
             if(args.size < 3) {
                 reject(player,"Usage: ::jail <seconds> <player>")
             }
@@ -250,7 +245,7 @@ class ModerationCommandSet : CommandSet(Privilege.MODERATOR){
          * =============================================================================================================
          */
 
-        define("modcr", Privilege.ADMIN, "::modcr <lt>user_name<gt> <lt>amount<gt>", "Modifies user_name's credits by the given amount.") {player, args ->
+        define("modcr", Privilege.MODERATOR, "::modcr <lt>user_name<gt> <lt>amount<gt>", "Modifies user_name's credits by the given amount.") {player, args ->
             val username = (args.getOrNull(1) ?: "").lowercase()
             val amount = args.getOrNull(2)?.toIntOrNull() ?: Integer.MIN_VALUE
 
@@ -313,35 +308,6 @@ class ModerationCommandSet : CommandSet(Privilege.MODERATOR){
                     CommandMapping.get("modcr")?.handle?.invoke(player, arrayOf("", username, amount))
                 }
             }
-        }
-
-        define("setrole", Privilege.ADMIN, "::setrole <lt>USERNAME<gt> <lt>player|mod|owner<gt>", "Sets a player's server role.") { player, args ->
-            val username = args.getOrNull(1)?.lowercase()
-            val role = when (args.getOrNull(2)?.lowercase()) {
-                "player", "regular" -> Rights.REGULAR_PLAYER
-                "mod", "moderator" -> Rights.PLAYER_MODERATOR
-                "owner", "admin", "administrator" -> Rights.ADMINISTRATOR
-                else -> null
-            }
-            if (username == null || role == null || args.size != 3) {
-                reject(player, "Usage: ::setrole <player> <player|mod|owner>")
-                return@define
-            }
-            if (!GameWorld.accountStorage.checkUsernameTaken(username)) {
-                reject(player, "Invalid username: $username")
-                return@define
-            }
-            if (!RolePolicy.canAssign(username, role.ordinal)) {
-                reject(player, "That account is not authorized for the requested role in the production allowlist.")
-                return@define
-            }
-
-            val target = Repository.getPlayerByName(username)
-            val account = target?.details?.accountInfo ?: GameWorld.accountStorage.getAccountInfo(username)
-            account.rights = role.ordinal
-            GameWorld.accountStorage.update(account)
-            notify(player, "Set $username's role to ${args[2].lowercase()}.")
-            target?.let { sendMessage(it, "Your role was set to ${args[2].lowercase()} by ${player.username}.") }
         }
 
         define("getattribute", Privilege.ADMIN, "::getattribute <lt>username<gt> <lt>attribute<gt>", "Gets the value of an attribute for a player.") {player, args ->

@@ -1,4 +1,3 @@
-/*
 package KondoKit.views
 
 import KondoKit.util.Helpers.getSpriteId
@@ -224,10 +223,8 @@ object HiscoresView : View {
             return
         }
 
-        */
-/*val cleanUsername = username.replace(" ", "_")
-        val apiUrl = "http://api.[oldname].org:3000/hiscores/playerSkills/1/${cleanUsername.toLowerCase()}"*//*
-
+        val cleanUsername = username.replace(" ", "_")
+        val apiUrl = "http://api.2009scape.org:3000/hiscores/playerSkills/1/${cleanUsername.toLowerCase()}"
 
         customSearchField?.setText(username)
         updateHiscoresViewStandalone(hiscoresPanel, null, "Searching...")
@@ -384,4 +381,3 @@ object HiscoresView : View {
         return Math.round((base + maxCombatType + summoningFactor) * 1000.0) / 1000.0
     }
 }
-*/

@@ -516,17 +516,6 @@ class ScriptAPI(private val bot: Player) {
     }
 
     /**
-     * Removes a produced item from this bot's bank without creating a Grand Exchange offer.
-     * Callers control when this happens, typically at their existing sale threshold.
-     */
-    fun discardBankedOutput(id: Int) {
-        val itemAmount = bot.bank.getAmount(id)
-        if (itemAmount <= 0) return
-        bot.bank.remove(Item(id, itemAmount))
-        bot.bank.refresh()
-    }
-
-    /**
      * Function to sell all items in a bot's bank on the Grand Exchange, if they are tradable.
      * @author Ceikry
      */

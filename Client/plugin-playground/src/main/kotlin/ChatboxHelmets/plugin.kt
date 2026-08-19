@@ -126,10 +126,10 @@ class plugin : Plugin() {
         }
 
         // No match found, check the hiscores (live server)
-        /*fetchAccountTypeFromAPI(lowercaseUsername)*/
+        fetchAccountTypeFromAPI(lowercaseUsername)
     }
 
-    /*private fun fetchAccountTypeFromAPI(lowercaseUsername : String){
+    private fun fetchAccountTypeFromAPI(lowercaseUsername : String){
         val apiUrl = "http://api.2009scape.org:3000/hiscores/playerSkills/1/${lowercaseUsername}"
         Thread {
             try {
@@ -150,7 +150,7 @@ class plugin : Plugin() {
                 }
             } catch (_: Exception) { }
         }.start()
-    }*/
+    }
 
     private fun updatePlayerData(jsonResponse: String, lowercaseUsername: String) {
         val hiscoresResponse = gson.fromJson(jsonResponse, HiscoresResponse::class.java)

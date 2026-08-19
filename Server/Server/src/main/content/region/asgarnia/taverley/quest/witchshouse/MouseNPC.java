@@ -6,7 +6,7 @@ import core.game.world.GameWorld;
 import core.game.world.map.Location;
 
 /**
- * Created for ComfyScape
+ * Created for 2009Scape
  * User: Ethan Kyle Millard
  * Date: March 15, 2020
  * Time: 10:56 AM

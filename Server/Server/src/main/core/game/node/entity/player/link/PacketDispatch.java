@@ -16,14 +16,6 @@ import core.net.packet.context.*;
 import core.net.packet.context.DisplayModelContext.ModelType;
 import core.net.packet.out.*;
 
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
 import static core.api.ContentAPIKt.log;
 import static core.api.ContentAPIKt.*;
 
@@ -34,16 +26,6 @@ import static core.api.ContentAPIKt.*;
  * @author Vexia
  */
 public final class PacketDispatch {
-
-	/**
-	 * Game chat is rendered as one visual line per MESSAGE_GAME packet by the client.
-	 */
-	private static final int MAX_GAME_MESSAGE_VISIBLE_CHARACTERS = 80;
-	private static final Pattern CHAT_TAG_PATTERN = Pattern.compile("<[^>]+>");
-	private static final String[] CLIENT_REQUEST_SUFFIXES = {
-			":tradereq:", ":chalreq:", ":assistreq:", ":clan:", ":trade:", ":assist:",
-			":duelstake:", ":duelfriend:", ":clanreq:", ":allyreq:"
-	};
 
 	/**
 	 * The instance of the {@code Player}.
@@ -83,138 +65,11 @@ public final class PacketDispatch {
 		if (player.getAttribute("chat_filter") != null && !message.contains("<col=CC6600>") && !message.contains("<col=FFFF00>")) {
 			return;
 		}
-		if (isClientRequestMessage(message)) {
-			sendRawMessage(message);
-			return;
-		}
-		for (String line : wrapGameMessage(message)) {
-			sendRawMessage(line);
-		}
-	}
-
-	/**
-	 * Sends one packet after its display-width wrapping has been resolved.
-	 */
-	private void sendRawMessage(String message) {
 		if (message.length() > 255) {
 			log(this.getClass(), Log.ERR,  "Message length out of bounds (" + message + ")!");
 			message = message.substring(0, 255);
 		}
 		PacketRepository.send(GameMessage.class, new GameMessageContext(player, message));
-	}
-
-	private static boolean isClientRequestMessage(String message) {
-		for (String suffix : CLIENT_REQUEST_SUFFIXES) {
-			if (message.endsWith(suffix)) {
-				return true;
-			}
-		}
-		return false;
-	}
-
-	/**
-	 * Wraps normal game-chat text without counting client formatting tags toward the visible width.
-	 */
-	static List<String> wrapGameMessage(String message) {
-		List<String> lines = new ArrayList<>();
-		if (message.isBlank()) {
-			lines.add(message);
-			return lines;
-		}
-
-		Map<String, String> activeTags = new LinkedHashMap<>();
-		StringBuilder line = new StringBuilder();
-		int visibleCharacters = 0;
-		boolean hasVisibleWord = false;
-
-		for (String word : message.trim().split("\\s+")) {
-			for (String segment : splitLongWord(word)) {
-				int segmentVisibleCharacters = visibleCharacterCount(segment);
-				if (hasVisibleWord
-						&& visibleCharacters + 1 + segmentVisibleCharacters > MAX_GAME_MESSAGE_VISIBLE_CHARACTERS) {
-					lines.add(line.toString());
-					line = new StringBuilder(activeTagPrefix(activeTags));
-					visibleCharacters = 0;
-					hasVisibleWord = false;
-				}
-				if (hasVisibleWord) {
-					line.append(' ');
-					visibleCharacters++;
-				}
-				line.append(segment);
-				visibleCharacters += segmentVisibleCharacters;
-				updateActiveTags(segment, activeTags);
-				hasVisibleWord |= segmentVisibleCharacters > 0;
-			}
-		}
-		if (line.length() > 0) {
-			lines.add(line.toString());
-		}
-		return lines;
-	}
-
-	private static List<String> splitLongWord(String word) {
-		List<String> segments = new ArrayList<>();
-		StringBuilder segment = new StringBuilder();
-		int visibleCharacters = 0;
-		for (int index = 0; index < word.length();) {
-			if (word.charAt(index) == '<') {
-				int tagEnd = word.indexOf('>', index);
-				if (tagEnd != -1) {
-					segment.append(word, index, tagEnd + 1);
-					index = tagEnd + 1;
-					continue;
-				}
-			}
-			segment.append(word.charAt(index++));
-			if (++visibleCharacters == MAX_GAME_MESSAGE_VISIBLE_CHARACTERS) {
-				segments.add(segment.toString());
-				segment.setLength(0);
-				visibleCharacters = 0;
-			}
-		}
-		if (segment.length() > 0) {
-			segments.add(segment.toString());
-		}
-		return segments;
-	}
-
-	private static int visibleCharacterCount(String text) {
-		return CHAT_TAG_PATTERN.matcher(text).replaceAll("").length();
-	}
-
-	private static String activeTagPrefix(Map<String, String> activeTags) {
-		StringBuilder prefix = new StringBuilder();
-		for (String tag : activeTags.values()) {
-			prefix.append(tag);
-		}
-		return prefix.toString();
-	}
-
-	private static void updateActiveTags(String text, Map<String, String> activeTags) {
-		Matcher matcher = CHAT_TAG_PATTERN.matcher(text);
-		while (matcher.find()) {
-			String tag = matcher.group();
-			String normalizedTag = tag.toLowerCase(Locale.ROOT);
-			String tagType = formattingTagType(normalizedTag);
-			if (tagType == null) {
-				continue;
-			}
-			if (normalizedTag.equals("</" + tagType + ">")) {
-				activeTags.remove(tagType);
-			} else {
-				activeTags.put(tagType, tag);
-			}
-		}
-	}
-
-	private static String formattingTagType(String tag) {
-		for (String type : new String[] {"col", "trans", "str", "u", "shad"}) {
-			if (tag.equals("<" + type + ">") || tag.startsWith("<" + type + "=") || tag.equals("</" + type + ">")) {
-				return type;
-			}
-		}
-		return null;
 	}
 
 	/**

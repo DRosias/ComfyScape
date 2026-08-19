@@ -1,4 +1,3 @@
-"""
 #!/usr/bin/env python3
 
 import subprocess
@@ -6,7 +5,7 @@ import datetime
 import os
 
 
-WEB_REPO = '../comfyscape.github.io'
+WEB_REPO = '../2009scape.github.io'
 NEWS_DIR = 'updates/_posts'
 LOG_DELIMITER = ';;;;;'
 DEBUG = False
@@ -82,4 +81,3 @@ def main() -> None:
 
 if __name__ == '__main__':
     main()
- """

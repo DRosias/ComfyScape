@@ -114,7 +114,7 @@ public final class BuildingUtils {
 			if (hasRequirements) {
 				c261Value += (1 << (menuIndex + 1));
 			}
-			setVarp(player, 1485 + menuIndex, hasRequirements || player.isAdmin() ? 1 : 0);
+			setVarp(player, 1485 + menuIndex, hasRequirements || player.isStaff() ? 1 : 0);
 			player.getPacketDispatch().sendString("Level " + decoration.getLevel(), 396, 140 + menuIndex);
 			//player.getPacketDispatch().sendItemZoomOnInterface(items[i].protocol(), 50000, 396, 49 + i);
 		}

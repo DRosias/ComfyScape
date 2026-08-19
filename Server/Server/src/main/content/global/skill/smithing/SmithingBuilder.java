@@ -74,7 +74,7 @@ public final class SmithingBuilder {
             }
 		}
 		else {
-			player.getPacketDispatch().sendInterfaceConfig(300, SmithingType.TYPE_PICKAXE.getChild() - 1, false);
+			player.getPacketDispatch().sendInterfaceConfig(300, 267, false);// pickaxe
 		}
 		final Bars bars[] = Bars.getBars(type);
 		for (int i = 0; i < bars.length; i++) {

@@ -21,7 +21,6 @@ import core.game.bots.AIRepository;
 import core.game.bots.GeneralBotCreator;
 import core.api.utils.NPCDropTable;
 import core.game.ge.GrandExchange;
-import core.game.world.GameWorld;
 import core.game.world.repository.Repository;
 
 import java.util.ArrayList;
@@ -32,14 +31,6 @@ import java.util.List;
  * @author Emperor
  */
 public final class NPCDropTables {
-	/** Saved setting for routing eligible NPC drops to inventory. */
-	public static final String AUTO_PICKUP_ATTRIBUTE = "/save:npc-drop-auto-pickup";
-
-	/** Saved setting for routing eligible NPC drops to the bank. */
-	public static final String AUTO_BANK_ATTRIBUTE = "/save:npc-drop-auto-bank";
-
-	/** Saved permission granted by Hans before either auto-drop command may be enabled. */
-	public static final String AUTO_DROP_COMMANDS_ENABLED_ATTRIBUTE = "/save:npc-drop-commands-enabled";
 
 	/**
 	 * The drop rates (0=common, 1=uncommon, 2=rare, 3=very rare).
@@ -115,12 +106,8 @@ public final class NPCDropTables {
 			item = item.getPlugin().getItem(item, npc);
 		}
 		if (!item.getDefinition().isStackable() && item.getAmount() > 1) {
-			Player creditedLooter = getLooter(player, npc, item);
-			if (routeDrop(item, creditedLooter)) {
-				return;
-			}
 			for (int i = 0; i < item.getAmount(); i++) {
-				GroundItemManager.create(new Item(item.getId()), l, creditedLooter);
+				GroundItemManager.create(new Item(item.getId()), l, player);
 			}
 			return;
 		}
@@ -134,11 +121,7 @@ public final class NPCDropTables {
 				GroundItemManager.create(item, l);
 			}
 		} else {
-			Player creditedLooter = getLooter(player, npc, item);
-			if (routeDrop(item, creditedLooter)) {
-				return;
-			}
-			GroundItem groundItem = GroundItemManager.create(item, l, creditedLooter);
+			GroundItem groundItem = GroundItemManager.create(item, l, getLooter(player, npc, item));
 			if(player instanceof AIPlayer) {
 				AIRepository.addItem(groundItem);
 			}
@@ -148,78 +131,6 @@ public final class NPCDropTables {
 				items.add(groundItem);
 				player.setAttribute("botting:drops",items);
 			}
-		}
-	}
-
-	/**
-	 * Attempts to route a normal NPC-table drop without creating a ground item.
-	 *
-	 * @return {@code true} when the complete item was delivered to a container.
-	 */
-	private static boolean routeDrop(Item item, Player player) {
-		if (item.getId() == 6199 || !isAutoDropRoutingEnabled(player)) {
-			return false;
-		}
-		if (isAutoBankEnabled(player)) {
-			if (item.getDefinition().isStackable() && player.getInventory().contains(item.getId(), 1)) {
-				return addToInventory(player, item);
-			}
-			Item bankItem = item.toUnnotedItem();
-			if (player.getBank().canAdd(bankItem) && player.getBank().hasSpaceFor(bankItem) && player.getBank().add(bankItem)) {
-				return true;
-			}
-			return isAutoPickupEnabled(player) && addToInventory(player, item);
-		}
-		return isAutoPickupEnabled(player) && addToInventory(player, item);
-	}
-
-	private static boolean addToInventory(Player player, Item item) {
-		return player.getInventory().hasSpaceFor(item) && player.getInventory().add(item);
-	}
-
-	public static boolean isAutoPickupEnabled(Player player) {
-		return player.getAttribute(AUTO_PICKUP_ATTRIBUTE, false);
-	}
-
-	public static boolean isAutoBankEnabled(Player player) {
-		return player.getAttribute(AUTO_BANK_ATTRIBUTE, false);
-	}
-
-	public static boolean isAutoDropCommandsEnabled(Player player) {
-		return player.getAttribute(AUTO_DROP_COMMANDS_ENABLED_ATTRIBUTE, false);
-	}
-
-	public static boolean hasAutoDropFeatureEnabled(Player player) {
-		return isAutoPickupEnabled(player) || isAutoBankEnabled(player);
-	}
-
-	public static boolean isAutoDropRoutingEnabled(Player player) {
-		return hasAutoDropFeatureEnabled(player)
-				&& !player.getSkullManager().isWilderness()
-				&& !GameWorld.getSettings().isPvp();
-	}
-
-	public static void setAutoPickupEnabled(Player player, boolean enabled) {
-		setSavedBoolean(player, AUTO_PICKUP_ATTRIBUTE, enabled);
-	}
-
-	public static void setAutoBankEnabled(Player player, boolean enabled) {
-		setSavedBoolean(player, AUTO_BANK_ATTRIBUTE, enabled);
-	}
-
-	public static void setAutoDropCommandsEnabled(Player player, boolean enabled) {
-		setSavedBoolean(player, AUTO_DROP_COMMANDS_ENABLED_ATTRIBUTE, enabled);
-		if (!enabled) {
-			setAutoPickupEnabled(player, false);
-			setAutoBankEnabled(player, false);
-		}
-	}
-
-	private static void setSavedBoolean(Player player, String attribute, boolean enabled) {
-		if (enabled) {
-			player.setAttribute(attribute, true);
-		} else {
-			player.removeAttribute(attribute);
 		}
 	}
 

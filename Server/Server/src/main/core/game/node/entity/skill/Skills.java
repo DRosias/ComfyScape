@@ -3,7 +3,6 @@ package core.game.node.entity.skill;
 import content.global.handlers.item.equipment.brawling_gloves.BrawlingGloves;
 import content.global.handlers.item.equipment.brawling_gloves.BrawlingGlovesManager;
 import content.global.skill.skillcapeperks.SkillcapePerks;
-import content.region.misthalin.lumbridge.dialogue.HansDialoguePlugin;
 import core.ServerConstants;
 import core.game.event.DynamicSkillLevelChangeEvent;
 import core.game.event.XPGainEvent;
@@ -41,6 +40,11 @@ public final class Skills {
 	 * Represents the constant modifier of experience.
 	 */
 	public double experienceMultiplier = 1.0;
+
+	/**
+	 * The maximum experience multiplier.
+	 */
+	public static final double MAX_EXPERIENCE_MOD = 60.0;
 
 	/**
 	 * Represents an array of skill names.
@@ -256,9 +260,6 @@ public final class Skills {
 		if (entity instanceof Player) {
 			PacketRepository.send(SkillLevel.class, new SkillContext((Player) entity, slot));
 			entity.dispatch(new XPGainEvent(slot, experienceAdd));
-			if (experienceAdd > 0) {
-				HansDialoguePlugin.sendSetupReminderIfNeeded(player);
-			}
 		}
 		if (GameWorld.getTicks() - lastUpdate >= 200) {
 			ArrayList<Pair<Integer,Double>> diffs = new ArrayList<>();
@@ -286,23 +287,7 @@ public final class Skills {
 	private double getExperienceMod(int slot, double experience, boolean playerMod, boolean multiplyer) {
 		//Keywords for people ctrl + Fing the project
 		//xprate xp rate xp multiplier skilling rate
-		double skillMultiplier;
-		switch (slot) {
-			case HERBLORE:
-			case RUNECRAFTING:
-				skillMultiplier = 2.0;
-				break;
-			case CRAFTING:
-			case SLAYER:
-				skillMultiplier = 1.5;
-				break;
-			case AGILITY:
-				skillMultiplier = 3.0;
-				break;
-			default:
-				skillMultiplier = 1.0;
-		}
-		return experienceMultiplier * skillMultiplier;
+		return experienceMultiplier;
 		/*if (!(entity instanceof Player)) {
 			return 1.0;
 		}

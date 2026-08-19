@@ -13,7 +13,6 @@ import core.game.node.entity.npc.agg.AggressiveHandler;
 import core.game.node.entity.player.Player;
 import core.game.node.entity.player.info.Rights;
 import core.game.node.entity.player.link.SkullManager;
-import core.game.node.entity.npc.drop.NPCDropTables;
 import core.game.node.item.GroundItemManager;
 import core.game.node.item.Item;
 import core.game.world.GameWorld;
@@ -216,9 +215,6 @@ public final class WildernessZone extends MapZone {
 			p.getInteraction().set(Option._P_ATTACK);
 		}
 		p.getSkullManager().setWilderness(true);
-		if (NPCDropTables.hasAutoDropFeatureEnabled(p)) {
-			p.getPacketDispatch().sendMessage("Auto-pickup and auto-bank drops are disabled in the Wilderness.");
-		}
 	}
 
 	@Override

@@ -45,14 +45,7 @@ class MajorUpdateWorker {
                 tickOffline()
 
             for (player in Repository.players.filter { !it.isArtificial }) {
-                val idleMillis = System.currentTimeMillis() - player.session.lastPing
-                if (idleMillis > 20000L) {
-                    log(
-                        MajorUpdateWorker::class.java,
-                        Log.WARN,
-                        "Disconnecting ${player.name} after ${idleMillis}ms without inbound traffic " +
-                            "(address=${player.session.address}, lastOpcode=${player.session.lastInboundOpcode})."
-                    )
+                if (System.currentTimeMillis() - player.session.lastPing > 20000L) {
                     player?.session?.lastPing = Long.MAX_VALUE
                     player?.session?.disconnect()
                 }

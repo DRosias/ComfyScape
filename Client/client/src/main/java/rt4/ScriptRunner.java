@@ -1235,9 +1235,6 @@ public final class ScriptRunner {
 
 	@OriginalMember(owner = "client!nf", name = "a", descriptor = "(Lclient!na;BZ)V")
 	public static void openUrl(@OriginalArg(0) JagString arg0, @OriginalArg(2) boolean arg1) {
-		if (PasswordRecoveryRequester.handleIfRecoveryUrl(arg0)) {
-			return;
-		}
 		if (!arg1) {
 			try {
 				GameShell.instance.getAppletContext().showDocument(arg0.method3127(GameShell.instance.getCodeBase()), "_top");
@@ -4809,9 +4806,6 @@ public final class ScriptRunner {
 														ssp--;
 														string = stringStack[ssp];
 														@Pc(8356) JagString local8356 = JagString.concatenate(new JagString[]{method479(), string});
-														if (PasswordRecoveryRequester.handleIfRecoveryUrl(local8356)) {
-															continue;
-														}
 														if (GameShell.frame != null || local1552 && SignLink.anInt5928 != 3 && SignLink.osName.startsWith("win") && !client.haveIe6) {
 															Protocol.newTab = local1552;
 															url = local8356;

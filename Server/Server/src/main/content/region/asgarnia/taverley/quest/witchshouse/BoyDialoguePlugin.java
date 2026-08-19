@@ -9,7 +9,7 @@ import core.game.node.item.Item;
 import content.data.Quests;
 
 /**
- * Created for ComfyScape
+ * Created for 2009Scape
  * User: Ethan Kyle Millard
  * Date: March 15, 2020
  * Time: 11:49 AM

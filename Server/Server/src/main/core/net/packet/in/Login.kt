@@ -8,6 +8,7 @@ import core.game.node.entity.player.Player
 import core.net.Constants
 import core.net.IoSession
 import core.tools.StringUtils
+import core.integrations.discord.Discord
 import proto.management.JoinClanRequest
 import proto.management.PlayerStatusUpdate
 import proto.management.RequestContactInfo
@@ -117,7 +118,7 @@ object Login {
             val encryptedBytes = ByteArray(numBytes)
             buffer.get(encryptedBytes)
 
-            val encryptedBigInt = BigInteger(1, encryptedBytes)
+            val encryptedBigInt = BigInteger(encryptedBytes)
             ByteBuffer.wrap(encryptedBigInt.modPow(exponent, modulus).toByteArray())
         } catch (e: BufferUnderflowException) {
             ByteBuffer.wrap(byteArrayOf(-1))
@@ -134,6 +135,12 @@ object Login {
         details.session = session
         details.info.translate(UIDInfo(details.ipAddress, "DEPRECATED", "DEPRECATED", "DEPRECATED"))
 
+        val archive = ServerStore.getArchive("flagged-ips")
+        val flaggedIps = archive.getList<String>("ips")
+        if (flaggedIps.contains(details.ipAddress)) {
+            Discord.postPlayerAlert(details.username, "Login from flagged IP ${details.ipAddress}")
+        }
+
         val player = Player(details)
         PlayerMonitor.log(player, LogType.IP_LOG, details.ipAddress)
         if (canBypassAccountLimitCheck(player)) {
@@ -148,7 +155,7 @@ object Login {
     }
 
     private fun canBypassAccountLimitCheck(player: Player): Boolean {
-        return player.rights == Rights.ADMINISTRATOR
+        return player.rights == Rights.ADMINISTRATOR || player.rights == Rights.PLAYER_MODERATOR
     }
 
     private fun proceedWithAcceptableLogin(session: IoSession, player: Player, opcode: Int) {

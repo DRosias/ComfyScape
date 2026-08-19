@@ -604,7 +604,10 @@ public class BankPinManager {
 	 * @return the unlocked
 	 */
 	public boolean isUnlocked() {
-		return !hasPin() || unlocked;
+		if (!hasPin()) {
+			return true;
+		}
+		return unlocked;
 	}
 
 	/**
