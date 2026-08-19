@@ -16,8 +16,23 @@ import kotlin.random.Random
 class ImmerseWorld : StartupListener {
 
     override fun startup() {
-        if(GameWorld.settings?.max_adv_bots!! > 0) {
-            spawnBots()
+        val settings = GameWorld.settings ?: return
+        if (settings.enable_bots) {
+            if (settings.max_adv_bots > 0) {
+                spawnBots()
+            }
+            return
+        }
+
+        if (!settings.enable_ambient_bots && !settings.enable_economy_bots && !settings.enable_doubling_money_scammers) {
+            return
+        }
+
+        Executors.newSingleThreadExecutor().execute {
+            Thread.currentThread().name = "Curated Bot Spawner"
+            if (settings.enable_ambient_bots) spawnAmbientBots()
+            if (settings.enable_economy_bots) spawnEconomyBots()
+            if (settings.enable_doubling_money_scammers) spawnDoubleMoneyBot(false)
         }
     }
 
@@ -48,6 +63,71 @@ class ImmerseWorld : StartupListener {
                     immerseGE()
                 }
             }
+        }
+
+        private fun spawnAmbientBots() {
+            val westBankIdlerBorders = ZoneBorders(3184, 3435, 3187, 3444)
+            GeneralBotCreator(
+                FletchingBankstander(),
+                skillingBotAssembler.produce(SkillingBotAssembler.Wealth.AVERAGE, Location.create(2722, 3493, 0))
+            )
+            GeneralBotCreator(
+                GlassBlowingBankstander(),
+                skillingBotAssembler.produce(SkillingBotAssembler.Wealth.AVERAGE, Location.create(2807, 3441, 0))
+            )
+            GeneralBotCreator(
+                GlassBlowingBankstander(),
+                skillingBotAssembler.produce(SkillingBotAssembler.Wealth.RICH, Location.create(3189, 3435, 0))
+            )
+            GeneralBotCreator(
+                FletchingBankstander(),
+                skillingBotAssembler.produce(SkillingBotAssembler.Wealth.AVERAGE, Location.create(3189, 3439, 0))
+            )
+            GeneralBotCreator(
+                Idler(),
+                skillingBotAssembler.produce(SkillingBotAssembler.Wealth.RICH, westBankIdlerBorders.randomLoc)
+            )
+            GeneralBotCreator(
+                GlassBlowingBankstander(),
+                skillingBotAssembler.produce(SkillingBotAssembler.Wealth.POOR, Location.create(3256, 3420, 0))
+            )
+        }
+
+        private fun spawnEconomyBots() {
+            GeneralBotCreator(
+                SeersMagicTrees(),
+                skillingBotAssembler.produce(SkillingBotAssembler.Wealth.AVERAGE, Location.create(2702, 3397, 0))
+            )
+            GeneralBotCreator(
+                SeersFlax(),
+                skillingBotAssembler.produce(SkillingBotAssembler.Wealth.POOR, Location.create(2738, 3444, 0))
+            )
+            GeneralBotCreator(LobsterCatcher(), Location.create(2805, 3435, 0))
+
+            repeat(5) {
+                GeneralBotCreator(SharkCatcher(), Location.create(2604, 3421, 0))
+            }
+
+            GeneralBotCreator(
+                CowKiller(),
+                assembler.produce(
+                    CombatBotAssembler.Type.MELEE,
+                    CombatBotAssembler.Tier.MED,
+                    Location.create(3261, 3269, 0)
+                )
+            )
+            GeneralBotCreator(
+                VarrockEssenceMiner(),
+                skillingBotAssembler.produce(SkillingBotAssembler.Wealth.POOR, Location.create(3253, 3420, 0))
+            )
+            GeneralBotCreator(
+                CoalMiner(),
+                skillingBotAssembler.produce(SkillingBotAssembler.Wealth.POOR, Location.create(3037, 9737, 0))
+            )
+            GeneralBotCreator(
+                CannonballSmelter(),
+                skillingBotAssembler.produce(SkillingBotAssembler.Wealth.AVERAGE, Location.create(3013, 3356, 0))
+            )
         }
 
         fun immerseAdventurer(){

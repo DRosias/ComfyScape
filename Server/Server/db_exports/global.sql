@@ -81,7 +81,7 @@ CREATE TABLE `members` (
 
 CREATE TABLE `worlds` (
   `world` int(2) UNSIGNED NOT NULL,
-  `ip` varchar(20) NOT NULL DEFAULT '127.0.0.1',
+  `ip` varchar(20) NOT NULL DEFAULT 'danny-games.servegame.com',
   `players` int(5) NOT NULL DEFAULT 0,
   `country` int(1) NOT NULL DEFAULT 0,
   `member` int(11) NOT NULL,
@@ -94,7 +94,7 @@ CREATE TABLE `worlds` (
 --
 
 INSERT INTO `worlds` (`world`, `ip`, `players`, `country`, `member`, `revision`, `lastResponse`) VALUES
-(1, '127.0.0.1', 0, 22, 1, 530, '2020-09-23 18:27:05');
+(1, 'danny-games.servegame.com', 0, 22, 1, 530, '2020-09-23 18:27:05');
 
 --
 -- Indexes for dumped tables

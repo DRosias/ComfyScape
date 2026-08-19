@@ -71,6 +71,8 @@ class GameSettings
         var msAddress: String,
         var enable_default_clan: Boolean,
         var enable_bots: Boolean,
+        var enable_ambient_bots: Boolean,
+        var enable_economy_bots: Boolean,
         var autostock_ge: Boolean,
         var allow_token_purchase: Boolean,
         var skillcape_perks: Boolean,
@@ -126,6 +128,8 @@ class GameSettings
             val msip = data["msip"].toString()
             val enable_default_clan = data["enable_default_clan"] as Boolean
             val enable_bots = data["enable_bots"] as Boolean
+            val enable_ambient_bots = if(data.containsKey("enable_ambient_bots")) data["enable_ambient_bots"] as Boolean else false
+            val enable_economy_bots = if(data.containsKey("enable_economy_bots")) data["enable_economy_bots"] as Boolean else false
             val autostock_ge = data["autostock_ge"] as Boolean
             val skillcape_perks = if(data.containsKey("skillcape_perks")) data["skillcape_perks"] as Boolean else false
             val increased_door_time = if(data.containsKey("increased_door_time")) data["increased_door_time"] as Boolean else false
@@ -155,6 +159,8 @@ class GameSettings
                     msip,
                     enable_default_clan,
                     enable_bots,
+                    enable_ambient_bots,
+                    enable_economy_bots,
                     autostock_ge,
                     allow_token_purchase,
                     skillcape_perks,

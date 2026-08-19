@@ -3,37 +3,26 @@ package content.region.misthalin.lumbridge.dialogue;
 import core.game.dialogue.DialoguePlugin;
 import core.game.dialogue.FacialExpression;
 import core.game.node.entity.npc.NPC;
-import core.game.node.entity.player.link.IronmanMode;
-import core.game.world.map.zone.ZoneBorders;
-import core.plugin.Initializable;
 import core.game.node.entity.player.Player;
-
-import static core.tools.DialogueConstKt.END_DIALOGUE;
-
+import core.game.node.entity.npc.drop.NPCDropTables;
+import core.plugin.Initializable;
 
 /**
- * Represents the dialogue plugin used for the hans npc.
+ * Hans provides player-facing server options.
  */
 @Initializable
 public final class HansDialoguePlugin extends DialoguePlugin {
+	public static final String ADULT_VERIFIED = "/save:hans:adult-verified";
+	public static final String HAS_CONFIRMED_HANS_SETUP = "/save:hans:setup-confirmed";
+	public static final String TELEPORT_UNLOCK_BYPASS_ENABLED = "/save:teleportUnlockBypassEnabled";
+	private static final String SETUP_REMINDER_SHOWN = "hans:setup-reminder-shown";
+	private static final String SETUP_REMINDER = "Reminder: Talk to Hans at home to choose your XP rate and optional server settings. If you want 1x XP, you can choose that there too.";
+	private static final String VERIFICATION_RETRY_AT = "/save:hans:adult-verification-retry-at";
+	private static final long VERIFICATION_RETRY_DELAY = 30_000L;
 
-	private int[] timePlayed = new int[3];
-	private int joinDateDays;
-	private boolean inStartDungeon;
-
-	/**
-	 * Constructs a new {@code HansDialoguePlugin} {@code Object}.
-	 */
 	public HansDialoguePlugin() {
-		/**
-		 * empty.
-		 */
 	}
 
-	/**
-	 * Constructs a new {@code HansDialoguePlugin} {@code Object}.
-	 * @param player the player.
-	 */
 	public HansDialoguePlugin(Player player) {
 		super(player);
 	}
@@ -46,361 +35,250 @@ public final class HansDialoguePlugin extends DialoguePlugin {
 	@Override
 	public boolean open(Object... args) {
 		npc = (NPC) args[0];
-		interpreter.sendDialogues(npc, FacialExpression.NEUTRAL, "Hello. What are you doing here?");
+		interpreter.sendDialogues(npc, FacialExpression.NEUTRAL, "Hello! What server option can I help with?");
 		stage = 0;
-		if (new ZoneBorders(2528, 5004, 2520, 4997).insideBorder(player.getLocation())) {
-			inStartDungeon = true;
-		}
 		return true;
 	}
 
 	@Override
 	public boolean handle(int interfaceId, int buttonId) {
-
-		if (inStartDungeon && stage == 0) {
-			stage = 1;
-			buttonId = 4;
-		}
-
 		switch (stage) {
 			case 0:
-				interpreter.sendOptions("Select an Option", "I'm looking for whoever is in charge of this place.", "I have come to kill everyone in this castle!", "I don't know. I'm lost. Where am I?", "Have you been here as long as me?");
-				stage++;
+				showMainOptions();
+				stage = 1;
 				break;
 			case 1:
-				switch (buttonId) {
-					case 1:
-						interpreter.sendDialogues(npc, FacialExpression.NEUTRAL, "Who, the Duke? He's in his study, on the first floor.");
-						stage = 50;
-						break;
-					case 2:
-						end();
-						//TODO:
-						// Face the player and walk away from them (like moon walking?).
-						// After a moment, return to normal pathing associated with HansNPC.java
-						npc.sendChat("Help! Help!");
-						break;
-					case 3:
-						interpreter.sendDialogues(npc, FacialExpression.NEUTRAL, "You are in Lumbridge Castle.");
-						stage = 50;
-						break;
-					case 4:
-						interpreter.sendDialogues(npc, FacialExpression.NEUTRAL, "I've been patrolling this castle for years!");
-						stage = 41;
-						break;
+				if (buttonId == 1) {
+					npc("Your current XP rate is: " + player.getSkills().experienceMultiplier + "x.");
+					stage = 10;
+				} else if (isAdultVerified() && buttonId == 2) {
+					showAutoDropCommandAccess();
+					stage = 30;
+				} else if (isAdultVerified() && buttonId == 3) {
+					showTeleportUnlockBypass();
+					stage = 40;
+				} else if (!isAdultVerified() && buttonId == 2) {
+					startVerification();
+				} else {
+					end();
 				}
 				break;
 			case 10:
-				switch (buttonId) {
-					case 1:
-						//Have you been here as long as me?
-						interpreter.sendDialogues(npc, FacialExpression.NEUTRAL, "I've been patrolling this castle for years!");
-						stage = 41;
-						break;
-					case 2:
-						npc("Your current XP rate is: " + player.getSkills().experienceMultiplier);
-						stage = 11;
-						break;
-					case 3:
-						//About Iron Man Mode...
-						if (player.getIronmanManager().isIronman()) {
-							npc("Your ironman mode is: " + player.getIronmanManager().getMode().name().toLowerCase());
-							stage = 50;
-						} else {
-							interpreter.sendOptions("Select an Option", "I would like to be an Iron Man.", "What is an Iron Man?", "Go Back...");
-							stage = 110;
-						}
-						break;
-					case 4:
-						interpreter.sendDialogue("Randoms are now permanently enabled. This option to be removed","at a later date.");
-						stage = END_DIALOGUE;
-						break;
-					case 5: // Go back
-						interpreter.sendOptions("Select an Option", "I'm looking for whoever is in charge of this place.", "I have come to kill everyone in this castle!", "I don't know. I'm lost. Where am I?", "More Options...");
-						stage = 1;
-						break;
-				}
+				showExperienceOptions();
+				stage = 11;
 				break;
-
 			case 11:
-				if (player.getSkills().experienceMultiplier == 5.0) {
-					player.newPlayer = player.getSkills().getTotalLevel() < 50;
-					options("Change xp rate", "Nevermind.");
-					stage++;
+				setExperienceRate(buttonId);
+				break;
+			case 20:
+				interpreter.sendOptions("Adult verification: question 1 of 3",
+						"W-2", "1099", "W-4", "I-9");
+				stage = 21;
+				break;
+			case 21:
+				if (buttonId == 1) {
+					interpreter.sendDialogues(npc, FacialExpression.NEUTRAL,
+							"Correct. At a bar, what does it mean to open a tab?");
+					stage = 22;
 				} else {
-					npc("Have a great day!");
-					stage = 131;
+					failVerification();
 				}
 				break;
-			case 12:
-				switch(buttonId){
-					case 1:
-						if(player.getAttributes().containsKey("permadeath")){
-							options("1.0x", "2.5x", "Stay 5.0x", "(HCIM Only) 10x");
-						} else {
-							options("1.0x", "2.5x", "Stay 5.0x");
-						}
-						stage++;
-						break;
-					case 2:
-						npc(FacialExpression.LAUGH, "Haha, alright then!");
-						stage = 50;
-						break;
-				}
+			case 22:
+				interpreter.sendOptions("Adult verification: question 2 of 3",
+						"Reserve a table", "Start a running bill to pay later",
+						"Pay the cover charge", "Ask for the bar's tax records");
+				stage = 23;
 				break;
-			case 13:
-				switch(buttonId){
-					case 1:
-						if(player.newPlayer) {
-							player.getSkills().experienceMultiplier = 1.0;
-							stage = 14;
-						} else {
-							stage = 15;
-							break;
-						}
-						break;
-					case 2:
-						if(player.newPlayer){
-							player.getSkills().experienceMultiplier = 2.5;
-							stage = 14;
-						} else {
-							stage = 15;
-						}
-						break;
-					case 3:
-						playerl(FacialExpression.FRIENDLY, "I'd rather stay 5x, thank you.");
-						stage = END_DIALOGUE;
-						return true;
-					case 4:
-						if (player.newPlayer) {
-							player.getSkills().experienceMultiplier = 10.0;
-							stage = 14;
-						} else {
-							stage = 15;
-						}
-						break;					
-				}
-				npc("One moment, please...");
-				break;
-			case 14:
-				npc("Tada, your xp rate is now " + player.getSkills().experienceMultiplier);
-				stage = 131;
-				break;
-			case 15:
-				npc("Sorry, only new accounts can select 2.5x.");
-				stage = 131;
-				break;
-				//Have you been here as long as me?
-			case 41:
-				interpreter.sendDialogues(player, FacialExpression.THINKING, "You must be old then?");
-				stage++;
-				break;
-			case 42:
-				interpreter.sendDialogues(npc, FacialExpression.LAUGH, "Haha, you could say I'm quite the veteran of these lands.", "Yes, I've been here a fair while...");
-				stage++;
-				break;
-			case 43: //mixing OSRS here
-				interpreter.sendDialogues(player, FacialExpression.ASKING, "Can you tell me how long I've been here?");
-				stage++;
-				break;
-			case 44:
-				if (!inStartDungeon) {
-					interpreter.sendDialogues(npc, FacialExpression.FRIENDLY, "Ahh, I see all the newcomers arriving in Lumbridge, ","fresh-faced and eager for adventure. I remember you...");
-					player.sendMessage("Feature not currently available.");
+			case 23:
+				if (buttonId == 2) {
+					interpreter.sendDialogues(npc, FacialExpression.NEUTRAL,
+							"Correct. What does it mean to buy a round?");
+					stage = 24;
 				} else {
-					interpreter.sendDialogues(npc, FacialExpression.FRIENDLY, "Ahh, I see all the newcomers arriving in Lumbridge, ","fresh-faced and eager for adventure.", "But this is the first time meeting you...");
+					failVerification();
+				}
+				break;
+			case 24:
+				interpreter.sendOptions("Adult verification: question 3 of 3",
+						"Buy a drink only for yourself", "Buy a new circular table",
+						"Buy drinks for the group", "Challenge everyone to a fight");
+				stage = 25;
+				break;
+			case 25:
+				if (buttonId == 3) {
+					player.setAttribute(ADULT_VERIFIED, true);
+					npc("Verification complete. You can now select the 50x XP rate.",
+							"Adult options also include auto-drop commands and teleport unlock bypass.");
+				} else {
+					failVerification();
+					break;
 				}
 				stage = 50;
 				break;
-				//TODO:
-			/*case 45:
-				getTimePlayed();
-
-				//The text:
-				//NOTE: it splits the text in different spots if the hours/minutes/days are 0 (because 0 days sounds weird, so it doesn't show it).
-
-				//You've spent [amount] days, [amount] hours, [amount] minutes in the world (NEXT LINE) since you arrived [amount] days ago.
-				//You've spent [amount] (days/hours), [amount] (hours/minutes) in the world since (NEXT LINE) you arrived [amount] days ago.
-				//You've spent [amount] (days/hours/minutes) in the world since you arrived (NEXT LINE) [amount] days ago.
-			*/
-
-			//Closing Chat
+			case 30:
+				interpreter.sendOptions("Auto-drop command access",
+						NPCDropTables.isAutoDropCommandsEnabled(player)
+								? "Disable auto-pickup and auto-bank commands"
+								: "Enable auto-pickup and auto-bank commands",
+						"Back");
+				stage = 31;
+				break;
+			case 31:
+				if (buttonId == 1) {
+					boolean enabled = !NPCDropTables.isAutoDropCommandsEnabled(player);
+					NPCDropTables.setAutoDropCommandsEnabled(player, enabled);
+					npc("Auto-pickup and auto-bank commands are now " + (enabled ? "enabled." : "disabled."),
+							enabled ? "Use their commands to enable either feature." : "Both auto-drop features are now disabled.");
+					stage = 50;
+				} else {
+					showMainOptions();
+					stage = 1;
+				}
+				break;
+			case 40:
+				interpreter.sendOptions("Teleport unlock bypass",
+						isTeleportUnlockBypassEnabled()
+								? "Disable teleport unlock bypass"
+								: "Enable teleport unlock bypass",
+						"Back");
+				stage = 41;
+				break;
+			case 41:
+				if (buttonId == 1) {
+					boolean enabled = !isTeleportUnlockBypassEnabled();
+					if (enabled && !isAdultVerified()) {
+						startVerification();
+						break;
+					}
+					player.setAttribute(TELEPORT_UNLOCK_BYPASS_ENABLED, enabled);
+					npc("Teleport unlock bypass is now " + (enabled ? "enabled." : "disabled."));
+					stage = 50;
+				} else {
+					showMainOptions();
+					stage = 1;
+				}
+				break;
 			case 50:
 				end();
 				break;
-
-			//About Iron Man Mode...
-			case 100:
-				switch (buttonId) {
-					case 1: //no longer want to be iron
-						if (player.getSavedData().getActivityData().getHardcoreDeath() == true) {
-							interpreter.sendDialogues(npc, FacialExpression.GUILTY, "Sorry, but you've fallen as a Hardcore Iron Man", "already. It would be unfair for those with other", " restrictions if your status were to be removed!");
-							stage = 50;
-							break;
-						}
-						if (player.getSkills().getTotalLevel() > 500 || player.getQuestRepository().getPoints() > 10){
-							interpreter.sendDialogues(npc, FacialExpression.GUILTY, "Sorry, but you are too far along your journey.", "It would be unfair for those with other", " restrictions if your status were to be removed!");
-							stage = 50;
-							break;
-						} else {
-							interpreter.sendDialogues(npc, FacialExpression.NEUTRAL, "I have removed your Iron Man status.");
-							player.getIronmanManager().setMode(IronmanMode.NONE);
-							player.sendMessage("Your Iron Man status has been removed.");
-							stage = 50;
-							break;
-						}
-					case 2: //change ironman mode
-						if (player.getSavedData().getActivityData().getHardcoreDeath() == true) {
-							interpreter.sendDialogues(npc, FacialExpression.GUILTY, "Sorry, but you've fallen as a Hardcore Iron Man", "already. It would be unfair for those with other", " restrictions if your status were to be changed!");
-							stage = 50;
-							break;
-						}
-						if (player.getSkills().getTotalLevel() > 500 || player.getQuestRepository().getPoints() > 10){
-							interpreter.sendDialogues(npc, FacialExpression.GUILTY, "Sorry, but you are too far along your journey.", "It would be unfair for those with other", " restrictions if your status were to be changed!");
-							stage = 50;
-							break;
-						} else {
-							interpreter.sendOptions("Select a Mode", "Standard", "<col=8A0808>Hardcore</col>", "<col=ECEBEB>Ultimate</col>", "Nevermind.");
-							stage = 150;
-							break;
-						}
-					case 3: // What is Iron Man Mode?
-						interpreter.sendDialogues(player, FacialExpression.ASKING,"What is an Iron Man?");
-						stage = 120;
-						break;
-					case 4: //Go back.
-						interpreter.sendOptions("Select an Option", "Have you been here as long as me?", "I'd like to learn faster!", "About Iron Man mode...", "Go Back...");
-						stage = 10;
-						break;
-				}
-				break;
-			case 110:
-				switch (buttonId) {
-					case 1: //I would like to be an Iron Man
-						if (player.getSkills().getTotalLevel() > 50 || player.getQuestRepository().getPoints() > 10){
-							interpreter.sendDialogues(npc, FacialExpression.GUILTY, "Sorry, but you are too far along your journey.", "It would be unfair for those with other", " restrictions if your status were to be changed!");
-							stage = 50;
-							break;
-						} else {
-							interpreter.sendOptions("Select a Mode", "Standard", "<col=8A0808>Hardcore</col>", "<col=ECEBEB>Ultimate</col>", "Nevermind.");
-							stage = 150;
-							break;
-						}
-					case 2: // What is Iron Man Mode?
-						player("What is an Iron Man?");
-						stage = 120;
-						break;
-					case 3: //Go back.
-						interpreter.sendOptions("Select an Option", "Have you been here as long as me?", "I'd like to learn faster!", "About Iron Man mode...", "Go Back...");
-						stage = 10;
-						break;
-				}
-				break;
-
-			//What is an Iron Man?
-			case 120:
-				interpreter.sendDialogues(npc, FacialExpression.NEUTRAL,"An Iron Man account is a style of playing where players", "are completely self-sufficient.");
-				stage++;
-				break;
-			case 121:
-				interpreter.sendDialogues(npc, FacialExpression.NEUTRAL,"A Standard Ironman does not receive items or", "assistance from other players. They cannot trade, stake,", "receive PK loot, scavenge dropped items, nor play", "certain minigames.");
-				stage++;
-				break;
-			case 122:
-				interpreter.sendDialogues(npc, FacialExpression.NEUTRAL,"In addition to Standard Ironman restrictions,", "<col=8A0808>Hardcore</col> Ironmen only have one life. In the event of","a dangerous death, a player will be downgraded to a", "Standard Ironman, and their stats frozen on the hiscores.");
-				stage++;
-				break;
-			case 123:
-				interpreter.sendDialogues(npc, FacialExpression.NEUTRAL,"For the ultimate challenge, players who choose the", "<col=ECEBEB>Ultimate</col> Ironman mode cannot use banks, nor", "retain any items on death in dangerous areas.");
-				stage++;
-				break;
-			case 124:
-				if (player.getIronmanManager().isIronman()) {
-					interpreter.sendOptions("Select an Option", "I no longer want to be an Iron Man", "I'd like to change my Iron Man mode", "What is an Iron Man?", "Go Back.");
-					stage = 100;
-				} else {
-					interpreter.sendOptions("Select an Option", "I would like to be an Iron Man.", "What is an Iron Man?", "Go Back...");
-					stage = 110;
-				}
-				break;
-
-			case 131:
-				end();
-				break;
-			//Change Iron man mode dialogue/code
-			case 150:
-				switch(buttonId){
-					case 1:
-					case 2:
-						interpreter.sendDialogues(npc, FacialExpression.NEUTRAL,"I have changed your Iron Man mode to: ","" + (buttonId == 1 ? "Standard" : "<col=8A0808>Hardcore</col>" + " Ironman mode."));
-						player.getSettings().toggleAcceptAid();
-						player.getIronmanManager().setMode(IronmanMode.values()[buttonId]);
-						if(buttonId == 2) {
-							player.setAttribute("/save:permadeath",true);
-						}
-						player.sendMessage("Your Iron Man status has been changed.");
-						stage = 50;
-						break;
-					case 3: //ultimate ironman
-						if (!player.getBank().isEmpty())
-						{
-							interpreter.sendDialogues(npc, FacialExpression.GUILTY, "Sorry, but your bank is has items in it.", "Please empty your bank and speak to me again.");
-							stage = 50;
-							break;
-						} else {
-							interpreter.sendDialogues(npc, FacialExpression.NEUTRAL,"I have changed your Iron Man mode to:","<col=ECEBEB>Ultimate</col> Ironman mode.");
-							player.getIronmanManager().setMode(IronmanMode.ULTIMATE);
-							player.sendMessage("Your Iron Man status has been changed.");
-							stage = 50;
-							break;
-						}
-					case 4:
-						if (player.getIronmanManager().isIronman()) {
-							interpreter.sendOptions("Select an Option", "I no longer want to be an Iron Man", "I'd like to change my Iron Man mode", "What is an Iron Man?", "Go Back...");
-							stage = 100;
-						} else {
-							interpreter.sendOptions("Select an Option", "I would like to be an Iron Man.", "What is an Iron Man?", "Go Back...");
-							stage = 110;
-						}
-						break;
-				}
-				break;
-
-
-			//About XP Multiplier
-			case 200:
-				interpreter.sendOptions("Select an Option", "Set my experience rate to 10x", "Nevermind.");
-				stage++;
-				break;
-			case 201:
-				switch (buttonId) {
-					case 1:
-						interpreter.sendDialogues(npc, FacialExpression.FRIENDLY, "Tada! Your experience rate is now 10x.", "Happy Scaping!");
-						player.getSkills().experienceMultiplier = 10.0;
-						stage = 50;
-						break;
-					case 2:
-					    end();
-						break;
-				}
-				break;
 		}
-
 		return true;
 	}
 
-	/**
-	 * Obtains the player's join date and time played.
-	 */
-	private void getPlayerTime() {
+	private void showMainOptions() {
+		if (isAdultVerified()) {
+			interpreter.sendOptions("Server Options", "Change XP rate", "Auto-drop command access",
+					"Teleport unlock bypass", "Leave");
+		} else {
+			interpreter.sendOptions("Server Options", "Change XP rate", "Prove I'm not a child", "Leave");
+		}
+	}
 
-		//TODO:
-		// Find the Date Joined and Time Played variables for the player WITHOUT directly connecting to the SQL database here
-		// Split the Time Played variable into Days, Hours and Minutes
-		// Insert each calculation into the timePlayed array ( 0 for Days, 1 for Hours and 2 for Minutes)
-		// Calculate the Days Since registering by subtracting the Date Joined from the Current Server Date (ServerDate - Join_Date)
-		// Insert the date difference into joinDateDays variable
-		// return;???
+	private void showAutoDropCommandAccess() {
+		npc("Auto-pickup and auto-bank command access is currently "
+				+ (NPCDropTables.isAutoDropCommandsEnabled(player) ? "enabled." : "disabled."));
+	}
+
+	private void showTeleportUnlockBypass() {
+		npc("Teleport unlock bypass is currently "
+				+ (isTeleportUnlockBypassEnabled() ? "enabled." : "disabled."));
+	}
+
+	private boolean isTeleportUnlockBypassEnabled() {
+		return player.getAttribute(TELEPORT_UNLOCK_BYPASS_ENABLED, false);
+	}
+
+	private void showExperienceOptions() {
+		if (isAdultVerified()) {
+			interpreter.sendOptions("Change XP rate",
+					"1x - The Purist (100-300 hours per skill)",
+					"10x - The Grinder (10-30 hours per skill)",
+					"25x - The Casual (4-8 hours per skill)",
+					"50x - The Casual-With-No-Time (1-3 hours per skill)");
+		} else {
+			interpreter.sendOptions("Change XP rate",
+					"1x - The Purist (100-300 hours per skill)",
+					"10x - The Grinder (10-30 hours per skill)",
+					"25x - The Casual (4-8 hours per skill)");
+		}
+	}
+
+	private void setExperienceRate(int buttonId) {
+		double rate;
+		switch (buttonId) {
+			case 1:
+				rate = 1.0;
+				break;
+			case 2:
+				rate = 10.0;
+				break;
+			case 3:
+				rate = 25.0;
+				break;
+			case 4:
+				if (!isAdultVerified()) {
+					npc("The 50x rate requires adult verification.");
+					stage = 50;
+					return;
+				}
+				rate = 50.0;
+				break;
+			default:
+				end();
+				return;
+		}
+		player.getSkills().experienceMultiplier = rate;
+		player.setAttribute(HAS_CONFIRMED_HANS_SETUP, true);
+		npc("Tada, your XP rate is now " + rate + "x.", "Happy Scaping!");
+		stage = 50;
+	}
+
+	private void startVerification() {
+		long retryAt = player.getAttribute(VERIFICATION_RETRY_AT, 0L);
+		long remaining = retryAt - System.currentTimeMillis();
+		if (remaining > 0) {
+			long seconds = (remaining + 999L) / 1000L;
+			npc("Please wait " + seconds + " second" + (seconds == 1 ? "" : "s") + " before trying again.");
+			stage = 50;
+			return;
+		}
+		npc("Three questions. Get them all right in one go.",
+				"First: which form reports an employee's wages to the IRS?");
+		stage = 20;
+	}
+
+	private void failVerification() {
+		player.setAttribute(VERIFICATION_RETRY_AT, System.currentTimeMillis() + VERIFICATION_RETRY_DELAY);
+		npc("Not quite. Take 30 seconds, then you may try again.");
+		stage = 50;
+	}
+
+	private boolean isAdultVerified() {
+		return isAdultVerified(player);
+	}
+
+	public static boolean isAdultVerified(Player player) {
+		return player.getAttribute(ADULT_VERIFIED, false);
+	}
+
+	public static boolean hasConfirmedHansSetup(Player player) {
+		return player.getAttribute(HAS_CONFIRMED_HANS_SETUP, false);
+	}
+
+	/**
+	 * Sends the Hans setup reminder at most once per login session.
+	 * Tutorial Island is excluded because its completion flow delivers this reminder explicitly.
+	 */
+	public static void sendSetupReminderIfNeeded(Player player) {
+		if (player.isArtificial()
+				|| !player.getAttribute("tutorial:complete", false)
+				|| hasConfirmedHansSetup(player)
+				|| player.getAttribute(SETUP_REMINDER_SHOWN, false)) {
+			return;
+		}
+		player.setAttribute(SETUP_REMINDER_SHOWN, true);
+		player.sendMessage(SETUP_REMINDER);
 	}
 
 	@Override

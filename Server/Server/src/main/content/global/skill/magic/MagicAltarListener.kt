@@ -7,11 +7,9 @@ import core.api.hasRequirement
 import core.api.lock
 import core.api.playAudio
 import core.api.sendMessage
-import core.game.event.SpellbookChangeEvent
 import core.game.interaction.IntType
 import core.game.interaction.InteractionListener
 import core.game.node.Node
-import core.game.node.entity.combat.equipment.WeaponInterface
 import core.game.node.entity.player.Player
 import core.game.node.entity.player.link.SpellBookManager
 import core.game.node.entity.player.link.SpellBookManager.SpellBook
@@ -52,26 +50,14 @@ class MagicAltarListener : InteractionListener {
 		if (altar.id == ANCIENT_ALTAR) {
 			player.skills.decrementPrayerPoints(player.skills.prayerPoints)
 		}
-		val weaponInterface = player.getExtension<WeaponInterface>(WeaponInterface::class.java)
-		if (weaponInterface != null && player.properties.autocastSpell != null) {
-			weaponInterface.selectAutoSpell(-1, true)
-		}
-		if (SpellBook.forInterface(player.spellBookManager.spellBook) == if (altar.id == ANCIENT_ALTAR) SpellBook.ANCIENT else SpellBook.LUNAR) {
-			player.dispatch(SpellbookChangeEvent(
-				SpellBook.forInterface(player.spellBookManager.spellBook),
-				SpellBook.MODERN,
-				SpellBookManager.SpellbookChangeSource.ALTAR))
+		val current = SpellBook.forInterface(player.spellBookManager.spellBook)
+		val altarBook = if (altar.id == ANCIENT_ALTAR) SpellBook.ANCIENT else SpellBook.LUNAR
+		if (current == altarBook) {
 			sendMessage(player, if (altar.id == ANCIENT_ALTAR) "You feel a strange drain upon your memory..." else "Modern spells activated!")
-			player.spellBookManager.setSpellBook(SpellBook.MODERN)
-			player.spellBookManager.update(player)
+			SpellbookSwitcher.switch(player, SpellBook.MODERN, SpellBookManager.SpellbookChangeSource.ALTAR)
 		} else {
-			player.dispatch(SpellbookChangeEvent(
-				SpellBook.forInterface(player.spellBookManager.spellBook),
-				if (altar.id == ANCIENT_ALTAR) SpellBook.ANCIENT else SpellBook.LUNAR,
-				SpellBookManager.SpellbookChangeSource.ALTAR))
 			sendMessage(player, if (altar.id == ANCIENT_ALTAR) "You feel a strange wisdom fill your mind..." else "Lunar spells activated!")
-			player.spellBookManager.setSpellBook(if (altar.id == ANCIENT_ALTAR) SpellBook.ANCIENT else SpellBook.LUNAR)
-			player.spellBookManager.update(player)
+			SpellbookSwitcher.switch(player, altarBook, SpellBookManager.SpellbookChangeSource.ALTAR)
 		}
 	}
 

@@ -16,8 +16,8 @@ class SQLStorageProvider : AccountStorageProvider {
         return DriverManager.getConnection(connectionString, connectionUsername, connectionPassword)
     }
 
-    fun configure(host: String, databaseName: String, username: String, password: String) {
-        connectionString = "jdbc:mysql://$host/$databaseName?useTimezone=true&serverTimezone=UTC"
+    fun configure(host: String, port: String, databaseName: String, username: String, password: String) {
+        connectionString = "jdbc:mysql://$host:$port/$databaseName?useTimezone=true&serverTimezone=UTC"
         connectionUsername = username
         connectionPassword = password
     }
@@ -190,10 +190,28 @@ class SQLStorageProvider : AccountStorageProvider {
         return res
     }
 
+    override fun getElevatedAccounts(): List<UserAccountInfo> {
+        getConnection().use { connection ->
+            connection.prepareStatement(elevatedAccountsQuery).use { query ->
+                query.executeQuery().use { result ->
+                    val accounts = ArrayList<UserAccountInfo>()
+                    while (result.next()) {
+                        accounts += UserAccountInfo.createDefault().also {
+                            it.username = result.getString(1)
+                            it.rights = result.getInt(2)
+                        }
+                    }
+                    return accounts
+                }
+            }
+        }
+    }
+
     companion object {
         private const val usernameQuery = "SELECT username FROM members WHERE username = ?;"
         private const val removeInfoQuery = "DELETE FROM members WHERE username = ?;"
         private const val accountsByIPQuery = "SELECT username FROM members WHERE lastGameIp = ?;"
+        private const val elevatedAccountsQuery = "SELECT username, rights FROM members WHERE rights <> 0;"
         private const val accountInfoQuery = "SELECT " +
                 "username," +
                 "password," +

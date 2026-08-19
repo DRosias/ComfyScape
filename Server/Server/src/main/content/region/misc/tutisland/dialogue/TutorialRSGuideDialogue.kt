@@ -11,7 +11,7 @@ import content.region.misc.tutisland.handlers.TutorialStage
 import core.game.component.Component.setUnclosable
 
 /**
- * Handles the 2009scape guide's dialogue
+ * Handles the ComfyScape guide's dialogue
  * @author Ceikry
  * @author Player Name
  */

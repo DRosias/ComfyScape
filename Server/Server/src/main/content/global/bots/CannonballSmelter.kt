@@ -219,7 +219,7 @@ class CannonballSmelter : Script() {
             }
 
             State.SELLING -> {
-                scriptAPI.sellOnGE(Items.CANNONBALL_2)
+                scriptAPI.discardBankedOutput(Items.CANNONBALL_2)
                 state = State.GO_BACK
             }
 

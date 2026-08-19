@@ -32,7 +32,7 @@ open class MeleeSwingHandler (vararg flags: SwingHandlerFlag)
  */
     : CombatSwingHandler(CombatStyle.MELEE, *flags) {
 	override fun canSwing(entity : Entity, victim : Entity) : InteractionType? {
-		//Credits wolfenzi, https://www.rune-server.ee/2009scape-development/rs2-server/snippets/608720-arios-hybridding-improve.html
+		// Credits: wolfenzi (external combat implementation reference).
 		var distance = if (usingHalberd(entity)) 2 else 1
 		var type = InteractionType.STILL_INTERACT
 		var goodRange = canMelee(entity, victim, distance)

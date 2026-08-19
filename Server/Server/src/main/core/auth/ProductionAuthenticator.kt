@@ -6,6 +6,7 @@ import core.ServerConstants
 import core.game.world.repository.Repository
 import core.storage.AccountStorageProvider
 import core.storage.SQLStorageProvider
+import core.security.RolePolicy
 import java.sql.SQLDataException
 import java.sql.Timestamp
 
@@ -13,12 +14,14 @@ class ProductionAuthenticator : AuthProvider<AccountStorageProvider>() {
     override fun configureFor(provider: AccountStorageProvider) {
         storageProvider = provider
         if (provider is SQLStorageProvider) {
-            provider.configure(ServerConstants.DATABASE_ADDRESS!!, ServerConstants.DATABASE_NAME!!, ServerConstants.DATABASE_USER!!, ServerConstants.DATABASE_PASS!!)
+            provider.configure(ServerConstants.DATABASE_ADDRESS!!, ServerConstants.DATABASE_PORT!!, ServerConstants.DATABASE_NAME!!, ServerConstants.DATABASE_USER!!, ServerConstants.DATABASE_PASS!!)
         }
     }
 
     override fun createAccountWith(info: UserAccountInfo): Boolean {
         try {
+            info.username = RolePolicy.normalize(info.username)
+            info.rights = 0
             info.password = SystemManager.getEncryption().hashPassword(info.password)
             info.joinDate = Timestamp(System.currentTimeMillis())
             storageProvider.store(info)
@@ -45,6 +48,8 @@ class ProductionAuthenticator : AuthProvider<AccountStorageProvider>() {
                 return Pair(AuthResponse.AccountDisabled, null)
             if(info.online)
                 return Pair(AuthResponse.AlreadyOnline, null)
+            if (ServerConstants.PRODUCTION_MODE && !RolePolicy.isAuthorized(info.username, info.rights))
+                return Pair(AuthResponse.AccountDisabled, null)
         } catch (e: Exception) {
             e.printStackTrace()
             return Pair(AuthResponse.CouldNotLogin, null)

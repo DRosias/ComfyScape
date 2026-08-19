@@ -10,7 +10,7 @@ import core.plugin.Initializable;
 import core.plugin.Plugin;
 
 /**
- * Created for 2009Scape
+ * Created for ComfyScape
  * User: Ethan Kyle Millard
  * Date: March 25, 2020
  * Time: 7:19 PM

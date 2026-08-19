@@ -138,7 +138,7 @@ public class ChaosElementalNPC extends AbstractNPC {
 					return;
 				}
 				if (attack.getProjectile().getProjectileId() == 557) {
-					playGlobalAudio(player.getLocation(), Sounds.CHAOS_ELEMENTAL_HIT_351); // C. Elemental Discord Impact SFX
+					playGlobalAudio(player.getLocation(), Sounds.CHAOS_ELEMENTAL_HIT_351); // Chaos Elemental impact sound effect
 				}
 				else if (attack.getProjectile().getProjectileId() == 554) {
 					playAudio(player, Sounds.CHAOS_ELEMENTAL_CONFUSION_IMPACT_346); // C. Elemental Confusion Impact SFX

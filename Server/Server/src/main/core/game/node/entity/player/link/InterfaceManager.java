@@ -12,6 +12,7 @@ import core.net.packet.context.WindowsPaneContext;
 import core.net.packet.out.CloseInterface;
 import core.net.packet.out.Interface;
 import core.net.packet.out.WindowsPane;
+import core.security.EncryptedPasswordInput;
 import core.tools.Log;
 import org.rs09.consts.Components;
 import content.region.misc.tutisland.handlers.TutorialStage;
@@ -203,6 +204,7 @@ public final class InterfaceManager {
 	public boolean close() {
 		if (player.getAttribute("runscript", null) != null) {
 			player.removeAttribute("runscript");
+			player.removeAttribute(EncryptedPasswordInput.REQUIRED_ATTRIBUTE);
 			player.getPacketDispatch().sendRunScript(101, "");
 		}
 		// Component 333 is an immediate(no-fading) full-screen HD-mode black screen which auto-clears when interrupted.

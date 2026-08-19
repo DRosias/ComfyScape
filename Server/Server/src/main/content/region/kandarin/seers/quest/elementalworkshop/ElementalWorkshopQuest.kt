@@ -26,7 +26,7 @@ import content.data.Quests
  *      Quality Assurance: Andrew C
  *      QuestHelp: Rob M
  *
- * 2009Scape adaptation:
+ * ComfyScape adaptation:
  *   @author Woah, with love
  */
 @Initializable

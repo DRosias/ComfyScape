@@ -21,7 +21,6 @@ import core.game.world.map.Location
 import core.game.world.map.RegionManager
 import core.game.world.map.path.Pathfinder
 import core.game.world.update.flag.context.Graphics
-import core.integrations.discord.Discord
 import core.tools.RandomFunction
 import core.tools.secondsToTicks
 import core.tools.ticksToCycles
@@ -123,7 +122,6 @@ abstract class RandomEventNPC(id: Int) : NPC(id) {
             player.properties.teleportLocation = Location.create(3212, 9620, 0)
         }
         player.graphics(SMOKE_GRAPHICS)
-        Discord.postPlayerAlert(player.username, "Ignored Random")
     }
 
     override fun clear() {

@@ -175,12 +175,10 @@ class SharkCatcher : Script() {
                 var geAmount = 0//OfferManager.getQuantitySoldForItem(Items.RAW_SHARK_383)
                 val totalAmount = (geAmount + botAmount) + 1
                 if(totalAmount > limit){
-                    scriptAPI.walkTo(Location.create(3164, 3487, 0))
-                    scriptAPI.sellOnGE(Items.RAW_SHARK_383)
+                    scriptAPI.discardBankedOutput(Items.RAW_SHARK_383)
                     state = State.STOP//.also { println("STOPPING") }
                 } else {
-                    scriptAPI.walkTo(Location.create(3164, 3487, 0))
-                    scriptAPI.sellOnGE(Items.RAW_SHARK_383)
+                    scriptAPI.discardBankedOutput(Items.RAW_SHARK_383)
                     state = State.TELE_FISH
                 }
             }

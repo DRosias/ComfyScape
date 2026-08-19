@@ -15,21 +15,6 @@ public class EncryptionManager {
 	// is a valid value.
 	private static int workload = 12;
 
-	public static void main(String... args) {
-		
-		  String pass = "lugi";
-		  String salt = BCrypt.gensalt(workload);
-
-		 
-
-		// "$2a$12$N3jCPMPEZTisbMf7PG9O7ePgTQEJjhNXGHOJ9zvovT8ibY3Uk.Xlm"));
-		String hash = "$2a$12$N3jCPMPEZTisbMf7PG9O7ePgTQEJjhNXGHOJ9zvovT8ibY3Uk.Xlm";
-	 salt = hash.substring(0, 29);
-
-		String hsh = hash.substring(29, hash.length());
-
-	}
-
 	/**
 	 * This method can be used to generate a string representing an account
 	 * password suitable for storing in a database. It will be an OpenBSD-style

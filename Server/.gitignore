@@ -38,6 +38,7 @@ Server/hasRan.txt
 /config
 /data
 /db
+/.local-tools
 
 # Env files containing secrets
 /.env

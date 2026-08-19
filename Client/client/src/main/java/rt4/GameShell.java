@@ -712,17 +712,14 @@ public abstract class GameShell extends Applet implements Runnable, FocusListene
 	}
 
         private void setWindowTitle() {
-            String modeString = "2009Scape [Test]";
+            String modeString = "ComfyScape";
             if (GlobalJsonConfig.instance != null) {
                 switch (GlobalJsonConfig.instance.ip_management) {
-                    case "play.2009scape.org":
-                        modeString = "2009Scape [Live]";
-                        break;
-                    case "test.2009scape.org":
-                        modeString = "2009Scape [Test]";
+                    case "danny-games.servegame.com":
+                        modeString = "ComfyScape";
                         break;
                     default:
-                        modeString = "2009Scape [Local]";
+                        modeString = "ComfyScape";
                         break;
                 }
             }

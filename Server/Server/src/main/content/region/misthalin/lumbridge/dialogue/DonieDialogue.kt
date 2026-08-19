@@ -37,7 +37,7 @@ class DonieDialogueFile : DialogueLabeller() {
         npc("This is the town of Lumbridge my friend.")
 
         label("howareyou")
-        npc("Aye, not too bad thank you. Lovely weather in", ""+ (GameWorld.settings?.name ?: "2009Scape") +" this fine day.")
+        npc("Aye, not too bad thank you. Lovely weather in", ""+ (GameWorld.settings?.name ?: "ComfyScape") +" this fine day.")
         player("Weather?")
         npc("Yes weather, you know.")
         npc("The state or condition of the atmosphere at a time and", "place, with respect to variables such as temperature,", "moisture, wind velocity, and barometric pressure.")

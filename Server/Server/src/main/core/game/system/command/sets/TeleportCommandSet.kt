@@ -10,6 +10,8 @@ import core.ServerConstants
 import core.api.log
 import core.game.system.command.Privilege
 import core.game.world.repository.Repository
+import core.game.node.entity.player.Player
+import core.game.node.entity.player.info.Rights
 import core.tools.Log
 
 @Initializable
@@ -166,18 +168,8 @@ class TeleportCommandSet : CommandSet(Privilege.ADMIN){
         /**
          * Teleport to a specific player
          */
-        define("teleto", Privilege.ADMIN, "::teleto <lt>USERNAME<gt>", "Teleports to the named player."){player,args ->
-            if (args.size < 1) {
-                reject(player,"syntax error: name")
-            }
-            val n = args.slice(1 until args.size).joinToString("_")
-            val target = Repository.getPlayerByName(n)
-            if (target == null) {
-                reject(player,"syntax error: name")
-            }
-            if (target!!.getAttribute<Any?>("fc_wave") != null) {
-                reject(player,"You cannot teleport to a player who is in the Fight Caves.")
-            }
+        define("teleto", Privilege.MODERATOR, "::teleto <lt>USERNAME<gt>", "Teleports to the named player."){player,args ->
+            val target = rescueTarget(player, args) ?: return@define
             player.properties.teleportLocation = target.location
         }
 
@@ -185,19 +177,19 @@ class TeleportCommandSet : CommandSet(Privilege.ADMIN){
         /**
          * Teleport a specific player to you
          */
-        define("teletome", Privilege.ADMIN, "::teletome <lt>USERNAME<gt>", "Teleports the given user to you."){player,args ->
-            if (args.size < 1) {
-                reject(player,"syntax error: name")
-            }
-            val n = args.slice(1 until args.size).joinToString("_")
-            val target = Repository.getPlayerByName(n)
-            if (target == null) {
-                reject(player,"syntax error: name")
-            }
-            if (target!!.getAttribute<Any?>("fc_wave") != null) {
-                reject(player,"You cannot teleport to a player who is in the Fight Caves.")
-            }
+        define("teletome", Privilege.MODERATOR, "::teletome <lt>USERNAME<gt>", "Teleports the given user to you."){player,args ->
+            val target = rescueTarget(player, args) ?: return@define
             target.properties.teleportLocation = player.location
+        }
+
+        define("sendhome", Privilege.MODERATOR, "::sendhome <lt>USERNAME<gt>", "Sends the named player to the server home location.") { player, args ->
+            val target = rescueTarget(player, args) ?: return@define
+            target.properties.teleportLocation = ServerConstants.HOME_LOCATION
+        }
+
+        define("unstuck", Privilege.MODERATOR, "::unstuck <lt>USERNAME<gt>", "Alias for ::sendhome.") { player, args ->
+            val target = rescueTarget(player, args) ?: return@define
+            target.properties.teleportLocation = ServerConstants.HOME_LOCATION
         }
 
 
@@ -207,5 +199,26 @@ class TeleportCommandSet : CommandSet(Privilege.ADMIN){
         define("home", Privilege.ADMIN, "", "Teleports to ServerConstants.HOME_LOCATION"){player,_ ->
             player.properties.teleportLocation = ServerConstants.HOME_LOCATION
         }
+    }
+
+    private fun rescueTarget(actor: Player, args: Array<String>): Player? {
+        if (args.size < 2) {
+            reject(actor, "Usage: ::${args[0]} <player>")
+            return null
+        }
+        val target = Repository.getPlayerByName(args.slice(1 until args.size).joinToString("_"))
+        if (target == null) {
+            reject(actor, "That player is not online.")
+            return null
+        }
+        if (actor.rights == Rights.PLAYER_MODERATOR && target.rights == Rights.ADMINISTRATOR) {
+            reject(actor, "Mods cannot use rescue commands on the owner.")
+            return null
+        }
+        if (target.getAttribute<Any?>("fc_wave") != null) {
+            reject(actor, "You cannot teleport a player who is in the Fight Caves.")
+            return null
+        }
+        return target
     }
 }

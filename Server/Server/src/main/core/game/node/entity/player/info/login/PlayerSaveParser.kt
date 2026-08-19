@@ -4,7 +4,6 @@ import core.JSONUtils
 import core.api.PersistPlayer
 import core.game.node.entity.combat.spell.CombatSpell
 import core.game.node.entity.player.Player
-import core.game.node.entity.player.link.IronmanMode
 import core.game.node.entity.player.link.SpellBookManager
 import core.game.node.entity.player.link.emote.Emotes
 import core.game.node.entity.player.link.music.MusicEntry
@@ -68,7 +67,6 @@ class PlayerSaveParser(val player: Player) {
         parseFamiliars()
         parseBankPin()
         parseHouse()
-        parseIronman()
         parseEmoteManager()
         parseStatistics()
         parseAchievements()
@@ -150,13 +148,6 @@ class PlayerSaveParser(val player: Player) {
                     player.emoteManager.emotes.add(e)
                 }
             }
-        }
-    }
-
-    fun parseIronman() {
-        if (saveFile!!.containsKey("ironManMode")) {
-            val ironmanMode = (saveFile!!["ironManMode"] as String).toInt()
-            player.ironmanManager.mode = IronmanMode.values()[ironmanMode]
         }
     }
 
@@ -336,11 +327,6 @@ class PlayerSaveParser(val player: Player) {
         player.skills.parse(skillData)
         player.skills.experienceGained = saveFile!!["totalEXP"].toString().toDouble()
         player.skills.experienceMultiplier = saveFile!!["exp_multiplier"].toString().toDouble()
-        val divisor: Double
-        if(player.skills.experienceMultiplier >= 10 && !player.attributes.containsKey("permadeath")){ //exclude permadeath HCIMs from XP squish
-            divisor = player.skills.experienceMultiplier / 5.0
-            player.skills.correct(divisor)
-        }
         if (saveFile!!.containsKey("milestone")) {
             val milestone: JSONObject = saveFile!!["milestone"] as JSONObject
             player.skills.combatMilestone = (milestone.get("combatMilestone")).toString().toInt()

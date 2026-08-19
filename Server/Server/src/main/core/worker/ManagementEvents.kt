@@ -269,21 +269,9 @@ object ManagementEvents {
                     if (info.clanName.isNotEmpty()) {
                         initializeClanWith(info)
                     } else {
-                        SystemLogger.logMS("Creating default server clan")
+                        SystemLogger.logMS("Loading default server clan")
                         if (GameWorld.settings!!.enable_default_clan && event.clanOwner == ServerConstants.SERVER_NAME.toLowerCase()) {
-                            //Create a user with the default clan and some basic settings and stick them in the account storage
-                            if (info == UserAccountInfo.createDefault()) {
-                                info.username = ServerConstants.SERVER_NAME.toLowerCase()
-                                info.password = ServerConstants.MS_SECRET_KEY
-                                info.rights = 2
-                                GameWorld.authenticator.createAccountWith(info)
-                                info = GameWorld.accountStorage.getAccountInfo(event.clanOwner)
-                            }
-
-                            info.clanName = "Global"
-                            info.clanReqs = "-1,-1,7,7" //Any join, any message, owner kick, owner loot
-                            GameWorld.accountStorage.update(info)
-                            initializeClanWith(info)
+                            if (!info.isDefault()) initializeClanWith(info)
                         }
                     }
                 }

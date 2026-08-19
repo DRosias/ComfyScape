@@ -89,7 +89,7 @@ class StockMarket : InterfaceListener {
         }
 
         on(Components.STOCKMARKET_105){player, _, op, button, _, _ ->
-            val tempOffer = getAttribute(player, "ge-temp", GrandExchangeOffer())
+            var tempOffer = getAttribute(player, "ge-temp", GrandExchangeOffer())
             var openedIndex = getAttribute(player, "ge-index", -1)
             var openedOffer = GrandExchangeRecords.getInstance(player).getOffer(openedIndex)
 
@@ -114,13 +114,33 @@ class StockMarket : InterfaceListener {
                 30,46,62,81,100,119 -> {
                     openedIndex = (button - 30) shr 4
                     openedOffer = GrandExchangeRecords.getInstance(player).getOffer(openedIndex)
-                    updateVarbits(player, openedOffer, openedIndex)
+                    if (openedOffer != null) {
+                        updateVarbits(player, openedOffer, openedIndex)
+                    } else {
+                        val offer = GrandExchangeOffer().also {
+                            it.player = player
+                            it.index = openedIndex
+                            it.sell = false
+                        }
+                        tempOffer = offer
+                        updateVarbits(player, offer, openedIndex, false)
+                    }
                     player.interfaceManager.openChatbox(Components.OBJDIALOG_389)
                 }
                 31,47,63,82,101,120 -> {
                     openedIndex = (button - 31) shr 4
                     openedOffer = GrandExchangeRecords.getInstance(player).getOffer(openedIndex)
-                    updateVarbits(player, openedOffer, openedIndex, true)
+                    if (openedOffer != null) {
+                        updateVarbits(player, openedOffer, openedIndex, true)
+                    } else {
+                        val offer = GrandExchangeOffer().also {
+                            it.player = player
+                            it.index = openedIndex
+                            it.sell = true
+                        }
+                        tempOffer = offer
+                        updateVarbits(player, offer, openedIndex, true)
+                    }
                     player.interfaceManager.openSingleTab(Component(Components.STOCKSIDE_107)).open(player)
                     player.packetDispatch.sendRunScript(
                             149, "IviiiIsssss", "", "", "", "Examine", "Offer",
@@ -155,9 +175,9 @@ class StockMarket : InterfaceListener {
                     updateOfferAmount(player, tempOffer, s.toInt())
                     setAttribute(player, "ge-temp", tempOffer)
                 }
-                180 -> updateOfferValue(player, tempOffer, GrandExchange.getRecommendedPrice(tempOffer.itemID))
-                177 -> updateOfferValue(player, tempOffer, (GrandExchange.getRecommendedPrice(tempOffer.itemID) * 0.95).toInt())
-                183 -> updateOfferValue(player, tempOffer, (GrandExchange.getRecommendedPrice(tempOffer.itemID) * 1.05).toInt())
+                180 -> updateOfferValue(player, tempOffer, getSuggestedOfferPrice(tempOffer))
+                177 -> updateOfferValue(player, tempOffer, (getSuggestedOfferPrice(tempOffer) * 0.95).toInt())
+                183 -> updateOfferValue(player, tempOffer, (getSuggestedOfferPrice(tempOffer) * 1.05).toInt())
                 171 -> updateOfferValue(player, tempOffer, tempOffer.offeredValue - 1)
                 173 -> updateOfferValue(player, tempOffer, tempOffer.offeredValue + 1)
                 185 -> sendInputDialogue(player, InputType.AMOUNT, "Enter the amount:"){value ->
@@ -228,6 +248,11 @@ class StockMarket : InterfaceListener {
 
     fun confirmOffer(player: Player, offer: GrandExchangeOffer, index: Int) : OfferConfirmResult
     {
+        if (index !in 0..5 || offer.itemID < 1 || offer.amount < 1) {
+            playAudio(player, Sounds.GE_TRADE_ERROR_4039)
+            sendMessage(player, "Choose an item and quantity before placing your offer.")
+            return OfferConfirmResult.OfferPlacementError
+        }
         if(offer.offeredValue < 1)
         {
             playAudio(player, Sounds.GE_TRADE_ERROR_4039)
@@ -279,10 +304,17 @@ class StockMarket : InterfaceListener {
                 sendMessage(player, "You do not have enough coins to cover the offer.")
                 return OfferConfirmResult.NotEnoughItemsOrCoins
             }
-            if(GrandExchange.dispatch(player, offer) && removeItem(player, Item(995, total)))
-            {
-                player.removeAttribute("ge-temp")
+            if (!removeItem(player, Item(995, total))) {
+                playAudio(player, Sounds.GE_TRADE_ERROR_4039)
+                sendMessage(player, "Unable to remove the coins for this offer. Please try again.")
+                return OfferConfirmResult.ItemRemovalFailure
             }
+            if (!GrandExchange.dispatch(player, offer)) {
+                addItem(player, 995, total)
+                sendMessage(player, "Unable to place GE offer. Please try again.")
+                return OfferConfirmResult.OfferPlacementError
+            }
+            player.removeAttribute("ge-temp")
         }
         playAudio(player, Sounds.GE_PLACE_ITEM_4043)
         offer.visualize(player)
@@ -320,7 +352,7 @@ class StockMarket : InterfaceListener {
             val isSale = sale ?: offer?.sell ?: false
             var lowPrice = 0
             var highPrice = 0
-            val recommendedPrice = GrandExchange.getRecommendedPrice(offer?.itemID ?: 0)
+            val recommendedPrice = getSuggestedOfferPrice(offer ?: GrandExchangeOffer().also { it.sell = isSale })
             if (PriceIndex.canTrade(offer?.itemID ?: 0)) {
                 lowPrice = (recommendedPrice * 0.95).toInt()
                 highPrice = (recommendedPrice * 1.05).toInt()
@@ -340,6 +372,10 @@ class StockMarket : InterfaceListener {
                 )
             }
         }
+
+        private fun getSuggestedOfferPrice(offer: GrandExchangeOffer): Int =
+            if (offer.sell) GrandExchange.getRecommendedPrice(offer.itemID)
+            else GrandExchange.getSuggestedBuyPrice(offer.itemID)
 
         @JvmStatic
         fun withdraw(player: Player, offer: GrandExchangeOffer, index: Int, op: Int)

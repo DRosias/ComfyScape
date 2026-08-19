@@ -4,6 +4,7 @@ import core.ServerConstants
 import core.storage.AccountStorageProvider
 import core.storage.InMemoryStorageProvider
 import core.storage.SQLStorageProvider
+import core.security.ProductionSafety
 
 object Auth {
     lateinit var authenticator: AuthProvider<*>
@@ -19,5 +20,7 @@ object Auth {
             ProductionAuthenticator().also { it.configureFor(storageProvider) }
         else
             DevelopmentAuthenticator().also { it.configureFor(storageProvider) }
+
+        ProductionSafety.prepareAndAudit(storageProvider, authenticator)
     }
 }

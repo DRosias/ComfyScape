@@ -1,6 +1,7 @@
 package content.region.misc.tutisland.dialogue
 
 import content.global.handlers.iface.RulesAndInfo
+import content.region.misthalin.lumbridge.dialogue.HansDialoguePlugin
 import content.region.misc.tutisland.handlers.*
 import core.ServerConstants
 import core.api.*
@@ -10,7 +11,6 @@ import core.game.dialogue.DialogueOption
 import core.game.interaction.InteractionListener
 import core.game.interaction.QueueStrength
 import core.game.node.entity.npc.NPC
-import core.game.node.entity.player.link.IronmanMode
 import core.game.node.entity.player.link.TeleportManager
 import core.game.node.item.Item
 import core.game.world.GameWorld
@@ -47,18 +47,19 @@ class TutorialMagicTutorDialogueFile : DialogueLabeller() {
             Item(Items.EMPTY_POT_1931),
             Item(Items.BREAD_2309),
             Item(Items.BRONZE_PICKAXE_1265),
-            Item(Items.BRONZE_DAGGER_1205),
-            Item(Items.BRONZE_SWORD_1277),
+            Item(Items.BRONZE_SCIMITAR_1321),
+            Item(Items.BRONZE_2H_SWORD_1307),
             Item(Items.WOODEN_SHIELD_1171),
             Item(Items.SHORTBOW_841),
             Item(Items.BRONZE_ARROW_882, 25),
-            Item(Items.AIR_RUNE_556, 25),
-            Item(Items.MIND_RUNE_558, 15),
-            Item(Items.WATER_RUNE_555, 6),
-            Item(Items.EARTH_RUNE_557, 4),
+            Item(Items.AIR_RUNE_556, 55),
+            Item(Items.MIND_RUNE_558, 50),
+            Item(Items.WATER_RUNE_555, 45),
+            Item(Items.EARTH_RUNE_557, 30),
+            Item(Items.FIRE_RUNE_554, 15),
             Item(Items.BODY_RUNE_559, 2)
         )
-        val STARTER_BANK = arrayOf(Item(Items.COINS_995, 25))
+        val STARTER_BANK = arrayOf(Item(Items.COINS_995, 50))
 
         exec { player, _ ->
             when (getAttribute(player, "tutorial:stage", 0)) {
@@ -103,61 +104,7 @@ class TutorialMagicTutorDialogueFile : DialogueLabeller() {
             exec { player, _ -> TutorialStage.load(player, 70) }
 
         label("finishedtutorial")
-            exec { player, _ ->
-                if (ServerConstants.XP_RATES || ServerConstants.IRONMAN) {
-                    loadLabel(player, "talk about inauthentic")
-                } else {
-                    loadLabel(player, "leave")
-                }
-            }
-
-        label("talk about inauthentic")
-            npc(ChatAnim.FRIENDLY, "Alright, last thing. Are you interested in our inauthentic ${ServerConstants.SERVER_NAME} features?", unclosable = true)
-            goto("inauthentic")
-
-        label("inauthentic")
-            options(
-                DialogueOption("xprate","Change XP rate (current: ${player?.skills?.experienceMultiplier}x)", skipPlayer = true) { _, _ ->
-                    return@DialogueOption ServerConstants.XP_RATES
-                },
-                DialogueOption("ironman","Set ironman mode (current: ${player?.ironmanManager?.mode?.name?.toLowerCase()})", skipPlayer = true) { _, _ ->
-                    return@DialogueOption ServerConstants.IRONMAN
-                },
-                DialogueOption("leave","I'm ready now."),
-                unclosable = true)
-
-        label("xprate")
-            options(
-                DialogueOption("1.0x","1.0x (default)", skipPlayer = true),
-                DialogueOption("2.5x","2.5x", skipPlayer = true),
-                DialogueOption("5.0x","5.0x", skipPlayer = true),
-                title = "Change XP rate (current: ${player?.skills?.experienceMultiplier}x)",
-                unclosable = true
-            )
-            for (rate in doubleArrayOf(1.0, 2.5, 5.0)) {
-                label("${rate}x")
-                exec { player, _ -> player.skills.experienceMultiplier = rate }
-                manual(unclosable = true) { player, _ -> player.dialogueInterpreter.sendDialogue("You set your XP rate to: ${rate}x.") }
-                goto("inauthentic")
-            }
-
-        label("ironman")
-            options(
-                DialogueOption("NONE","None (default)", skipPlayer = true),
-                DialogueOption("STANDARD","Standard", skipPlayer = true),
-                DialogueOption("ULTIMATE","Ultimate (no bank)", skipPlayer = true),
-                title = "Change ironman mode (current: ${player?.ironmanManager?.mode?.name?.toLowerCase()}x)"
-            )
-            for (mode in arrayOf(IronmanMode.NONE, IronmanMode.STANDARD, IronmanMode.ULTIMATE)) {
-                label(mode.name)
-                exec { player, _ -> player.ironmanManager.mode = mode }
-                manual(unclosable = true){ player, _ -> return@manual player.dialogueInterpreter.sendDialogue("You set your ironman mode to: ${mode.name.toLowerCase()}.") }
-                exec { player, _ -> loadLabel(player, if (player.ironmanManager.mode == IronmanMode.NONE) "inauthentic" else "ironwarning") }
-            }
-
-        label("ironwarning")
-            manual(unclosable = true) { player, _ -> player.dialogueInterpreter.sendDialogue(*splitLines("WARNING: You have selected an ironman mode. This is an uncompromising mode that WILL completely restrict your ability to trade. This MAY leave you unable to complete certain content, including quests.")) }
-            goto("inauthentic")
+            goto("leave")
 
         label("leave")
             npc(ChatAnim.FRIENDLY, "Well, you're all finished here now. I'll give you a reasonable number of starting items when you leave.", unclosable = true)
@@ -212,6 +159,7 @@ class TutorialMagicTutorDialogueFile : DialogueLabeller() {
                     "for the question mark icon on your mini-map. If you find you are lost",
                     "at any time, look for a signpost or use the Lumbridge Home Port Spell."
                 )
+                HansDialoguePlugin.sendSetupReminderIfNeeded(player)
                 if (ServerConstants.RULES_AND_INFO_ENABLED) {
                     RulesAndInfo.openFor(player)
                     // The teleport finishing will release the player, so we need to relock them here

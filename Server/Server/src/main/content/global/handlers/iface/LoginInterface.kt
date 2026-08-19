@@ -10,8 +10,6 @@ class LoginInterface : InterfaceListener {
     override fun defineInterfaceListeners() {
         on(Components.WELCOME_SCREEN_378) { player, _, _, buttonID, _, _ ->
             val playButton = 140
-            val creditButton = 145
-            val discordButton = 204
 
             when (buttonID) {
                 playButton -> {
@@ -21,8 +19,6 @@ class LoginInterface : InterfaceListener {
                         LoginConfiguration.configureGameWorld(player)
                     }
                 }
-                creditButton -> return@on true
-                discordButton -> return@on true
             }
             return@on true
         }

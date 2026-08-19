@@ -29,7 +29,7 @@ class CraftItemWithLogScript(
 
     private val initialDelay = 1
 
-    // src https://gitlab.com/2009scape/2009scape/-/merge_requests/1960#note_2702231552
+    // Source: prior implementation review.
     private val subsequentDelay = 3
 
     private val carveLogAnimation = Animation(1248)

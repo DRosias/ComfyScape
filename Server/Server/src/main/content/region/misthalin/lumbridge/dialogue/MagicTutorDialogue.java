@@ -194,14 +194,14 @@ public final class MagicTutorDialogue extends DialoguePlugin {
 
 	public void add(boolean mind) {
 		if (mind) {
-			if (player.getInventory().add(new Item(558, 30))) {
-				player.getPacketDispatch().sendMessage("Mikasi gives you 30 mind runes.");
+			if (player.getInventory().add(new Item(558, 60))) {
+				player.getPacketDispatch().sendMessage("Mikasi gives you 60 mind runes.");
 				stage = 300;
 				player.getSavedData().getGlobalData().setTutorClaim(System.currentTimeMillis() + 1800000);
 			}
 		} else {
-			if (player.getInventory().add(new Item(556, 30))) {
-				player.getPacketDispatch().sendMessage("Mikasi gives you 30 air runes.");
+			if (player.getInventory().add(new Item(556, 60))) {
+				player.getPacketDispatch().sendMessage("Mikasi gives you 60 air runes.");
 				stage = 301;
 				player.getSavedData().getGlobalData().setTutorClaim(System.currentTimeMillis() + 1800000);
 			}

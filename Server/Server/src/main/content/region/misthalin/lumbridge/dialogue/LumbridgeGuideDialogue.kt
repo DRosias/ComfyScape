@@ -1,11 +1,9 @@
 package content.region.misthalin.lumbridge.dialogue
 
 import core.api.isQuestComplete
-import core.api.sendGraphics
 import core.game.dialogue.DialoguePlugin
 import core.game.dialogue.FacialExpression
 import core.game.node.entity.player.Player
-import core.game.node.entity.player.link.IronmanMode
 import core.game.node.entity.player.link.diary.DiaryType
 import core.game.world.map.zone.impl.ModeratorZone
 import core.plugin.Initializable
@@ -23,7 +21,6 @@ class LumbridgeGuideDialogue(player: Player? = null) : DialoguePlugin(player) {
 
     override fun handle(interfaceId: Int, buttonId: Int): Boolean {
         val staff = player.isStaff
-        val ironman = player.ironmanManager.isIronman
         val sheepShearerComplete = isQuestComplete(player, Quests.SHEEP_SHEARER)
         val cooksAssistantComplete = isQuestComplete(player, Quests.COOKS_ASSISTANT)
 
@@ -34,15 +31,13 @@ class LumbridgeGuideDialogue(player: Player? = null) : DialoguePlugin(player) {
                 Topic("What monsters should I fight?", 20),
                 Topic("Where can I make money?", 30),
                 Topic("I'd like to know more about security.", 40),
-                IfTopic("Where can I find a bank?", 50, !staff && !ironman),
-                IfTopic("More Options...", 100, staff || ironman, skipPlayer = true),
+                Topic("Where can I find a bank?", 50),
+                IfTopic("More Options...", 100, staff, skipPlayer = true),
             )
 
             //More Options...
             100 -> showTopics(
-                Topic("Where can I find a bank?", 50),
                 IfTopic("I would like to access the P-Mod room.", 200, staff),
-                IfTopic("I would like to de-iron.", 300, ironman),
                 Topic("Go back...", 1, skipPlayer = true)
             )
 
@@ -92,32 +87,6 @@ class LumbridgeGuideDialogue(player: Player? = null) : DialoguePlugin(player) {
                     ModeratorZone.teleport(player)
             }
 
-            //deiron
-            300 -> npcl(FacialExpression.FRIENDLY, "Of course, but first let me give you a word of warning.").also { stage++ }
-            301 -> npcl(FacialExpression.FRIENDLY, "Should you choose to step away from the path of the ironman now, you will not have the option to return.").also { stage++ }
-            302 -> npcl(FacialExpression.FRIENDLY, "Now I ask you to make sure, are you sure you want to <b>permanently</b> remove ironman mode?").also { stage++ }
-            303 -> showTopics(
-                Topic(FacialExpression.FRIENDLY, "Yes, I'm sure.", 310),
-                Topic(FacialExpression.FRIENDLY, "No, I've changed my mind.", END_DIALOGUE)
-            )
-
-            //yes - deiron
-            310 -> npcl(FacialExpression.FRIENDLY, "Very well, let me just check one thing...").also { stage++ }
-            311 -> if (player.ironmanManager.mode == IronmanMode.HARDCORE) {
-                npcl(FacialExpression.WORRIED, "Oh, dear, it's just as I feared. You're a hardcore ironman! My apologies, but there's nothing I can do to help.").also { stage = END_DIALOGUE }
-            } else {
-                npcl(FacialExpression.FRIENDLY, "Oh, wonderful. It appears everything is in order. Sit still for a moment...").also { stage++ }
-            }
-            312 -> {
-                sendGraphics(342, player.location)
-                sendDialogue("------------------", "The wise old wizard casts a strange spell.", "------------------")
-                stage++
-            }
-            313 -> {
-                player.ironmanManager.mode = IronmanMode.NONE
-                npcl(FacialExpression.HALF_ASKING, "There, I believe it is done. You should no longer be restricted from the wider world.")
-                stage = END_DIALOGUE
-            }
         }
         return true
     }

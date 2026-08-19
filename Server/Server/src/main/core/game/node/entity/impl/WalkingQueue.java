@@ -187,9 +187,21 @@ public final class WalkingQueue {
 	 */
 	private double getEnergyDrainRate(Player player) {
 		double rate = 0.55;
-		if (player.getSettings().getWeight() > 0.0) {
-			rate *= 1 + (player.getSettings().getWeight() / 100);
-		}
+		/*
+		 * Weight above 64 kg does not further increase stamina drain. This
+		 * establishes the heaviest load Agility must overcome at level 99.
+		 */
+		double effectiveWeight = Math.max(0.0, Math.min(64.0, player.getSettings().getWeight()));
+		rate *= 1 + (effectiveWeight / 100.0);
+		/*
+		 * A level-1 player drains 1.54x the historical base rate, calibrated
+		 * to exhaust a full energy bar over the Lumbridge-to-Varrock run. The
+		 * drain then tapers linearly to zero at level 99. This lets Agility
+		 * overcome the full 64 kg effective-weight penalty only at the cap.
+		 */
+		double agilityLevel = Math.max(1.0, Math.min(99.0, player.getSkills().getLevel(Skills.AGILITY)));
+		double agilityDrainFactor = 1.54 * (1.0 - ((agilityLevel - 1.0) / 98.0));
+		rate *= agilityDrainFactor;
         if (hasTimerActive(player, "hamstrung")) {
             rate *= 4;
         }
@@ -225,7 +237,19 @@ public final class WalkingQueue {
 		if (!decrease && p.getSettings().getRunEnergy() >= 100.0) {
 			return;
 		}
-		double drain = decrease ? getEnergyDrainRate(p) : -getEnergyRestore(p);
+		if (decrease) {
+			p.getSettings().setLowEnergyRecoveryActive(false);
+		} else if (p.getSettings().getRunEnergy() <= 0.0) {
+			p.getSettings().setLowEnergyRecoveryActive(true);
+		} else if (p.getSettings().isLowEnergyRecoveryActive()
+				&& p.getSettings().getRunEnergy() >= 20.0) {
+			p.getSettings().setLowEnergyRecoveryActive(false);
+		}
+		double restore = getEnergyRestore(p);
+		if (p.getSettings().isLowEnergyRecoveryActive()) {
+			restore *= 2;
+		}
+		double drain = decrease ? getEnergyDrainRate(p) : -restore;
 		p.getSettings().updateRunEnergy(drain);
 	}
 

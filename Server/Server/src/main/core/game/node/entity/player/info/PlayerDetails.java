@@ -79,7 +79,7 @@ public class PlayerDetails {
 	 * @return The rights.
 	 */
 	public Rights getRights() {
-		return Rights.values()[accountInfo.getRights()];
+		return Rights.forId(accountInfo.getRights());
 	}
 
 	/**

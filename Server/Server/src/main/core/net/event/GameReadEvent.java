@@ -95,6 +95,7 @@ public final class GameReadEvent extends IoReadEvent {
 			buffer.get(data);
 			IoBuffer buf = new IoBuffer(opcode, null, ByteBuffer.wrap(data));
 			session.setLastPing(System.currentTimeMillis());
+			session.setLastInboundOpcode(opcode);
 			last = opcode;
 
 			//Authentic per-player per-tick limit on inbound packets

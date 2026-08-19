@@ -82,7 +82,7 @@ public enum DiaryType {
              * - Teleport to underground gem mine // todo
              */
     ),
-    // https://2009scape.wiki/w/Varrock_achievements?oldid=891055
+    // Source: archived achievement documentation.
     VARROCK("Varrock", 15,
             new String[]{"Easy", "Medium", "Hard"},
             new String[][]{ // TODO verify implementation ingame
@@ -179,7 +179,7 @@ public enum DiaryType {
              * - Option to change Varrock tele location to the GE by talking to Vannaka // todo
              */
     ),
-    // https://2009scape.wiki/w/Lumbridge_achievements?oldid=866361
+    // Source: archived achievement documentation.
     LUMBRIDGE("Lumbridge", 2,
             new String[]{"Beginner", "Easy", "Medium"},
             new String[][]{
@@ -268,7 +268,7 @@ public enum DiaryType {
              */
 
     ),
-    // https://2009scape.wiki/w/Falador_achievements?oldid=900390
+    // Source: archived achievement documentation.
     FALADOR("Falador", 23,
             new String[]{"Easy", "Medium", "Hard"},
             new String[][]{
@@ -339,7 +339,7 @@ public enum DiaryType {
              * - can trade Mole Skins in to Wyson in exchange for white lily seeds and birds nest
              */
     ),
-    // https://2009scape.wiki/w/Fremennik_achievements?oldid=877418
+    // Source: archived achievement documentation.
     FREMENNIK("Fremennik", 19,
             new String[]{"Easy", "Medium", "Hard"},
             new String[][]{
@@ -391,7 +391,7 @@ public enum DiaryType {
             // Council Workman, Yrsa, Advisor Ghrim  // TODO dialogues for all these
             new int[]{1287, 1301, 1375}
     ),
-    // https://2009scape.wiki/w/Seers%27_Village_achievements?oldid=900527
+    // Source: archived achievement documentation.
     // https://www.youtube.com/watch?v=chYdp5HKJAg easy
     SEERS_VILLAGE("Seers' Village", 27,
             new String[]{"Easy", "Medium", "Hard"},

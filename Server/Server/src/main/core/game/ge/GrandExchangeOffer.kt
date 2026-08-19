@@ -9,7 +9,6 @@ import core.net.packet.context.ContainerContext
 import core.net.packet.context.GrandExchangeContext
 import core.net.packet.out.ContainerPacket
 import core.net.packet.out.GrandExchangePacket
-import core.integrations.discord.Discord
 import core.game.world.repository.Repository
 import kotlin.math.min
 import java.sql.ResultSet
@@ -124,16 +123,16 @@ class GrandExchangeOffer() {
     {
         GEDB.run { conn ->
             if (isBot) {
-                val stmt = conn.createStatement()
-                val result = stmt.executeQuery("SELECT * from bot_offers where item_id = $itemID")
-                val isExists = result.next()
-
-                if (isExists) {
-                    val oldAmount = result.getInt("amount")
-                    stmt.executeUpdate("UPDATE bot_offers set amount = ${oldAmount + amount} where item_id = $itemID")
-                } else
-                    stmt.executeUpdate("INSERT INTO bot_offers(item_id,amount) values($itemID,$amount)")
-                stmt.close()
+                conn.prepareStatement(
+                    "INSERT INTO bot_offers(item_id, amount, offered_value) VALUES (?, ?, ?) " +
+                        "ON CONFLICT(item_id) DO UPDATE SET " +
+                        "amount = bot_offers.amount + excluded.amount, offered_value = excluded.offered_value"
+                ).use { stmt ->
+                    stmt.setInt(1, itemID)
+                    stmt.setInt(2, amount)
+                    stmt.setInt(3, offeredValue)
+                    stmt.executeUpdate()
+                }
             } else {
                 val stmt = conn.createStatement()
                 stmt.executeUpdate(
@@ -146,7 +145,6 @@ class GrandExchangeOffer() {
                 visualize(player)
                 stmt.close()
 
-                Discord.postNewOffer(sell, itemID, offeredValue, amount, player?.username ?: return@run)
             }
         }
     }
@@ -219,7 +217,7 @@ class GrandExchangeOffer() {
             o.amount = result.getInt("amount")
             o.offerState = OfferState.REGISTERED
             o.itemID = result.getInt("item_id")
-            o.offeredValue = GrandExchange.getRecommendedPrice(o.itemID, true)
+            o.offeredValue = result.getInt("offered_value")
             o.isBot = true
             o.timeStamp = System.currentTimeMillis()
             return o

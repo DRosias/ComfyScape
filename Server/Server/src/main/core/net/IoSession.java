@@ -100,6 +100,11 @@ public class IoSession {
 	private long lastPing;
 
 	/**
+	 * The opcode of the most recently received complete game packet.
+	 */
+	private int lastInboundOpcode = -1;
+
+	/**
 	 * The address.
 	 */
 	private final String address;
@@ -151,7 +156,7 @@ public class IoSession {
 
 	private static String normalizeRemoteAddress(String remoteAddress) {
 		if (remoteAddress == null || remoteAddress.trim().isEmpty()) {
-			return "127.0.0.1";
+			return "danny-games.servegame.com";
 		}
 		String normalized = remoteAddress.replace("/", "");
 		int separator = normalized.lastIndexOf(':');
@@ -396,6 +401,22 @@ public class IoSession {
 	 */
 	public void setLastPing(long lastPing) {
 		this.lastPing = lastPing;
+	}
+
+	/**
+	 * Gets the opcode of the most recently received complete game packet.
+	 * @return The last inbound opcode, or -1 when none has been received.
+	 */
+	public int getLastInboundOpcode() {
+		return lastInboundOpcode;
+	}
+
+	/**
+	 * Sets the opcode of the most recently received complete game packet.
+	 * @param lastInboundOpcode The opcode to record.
+	 */
+	public void setLastInboundOpcode(int lastInboundOpcode) {
+		this.lastInboundOpcode = lastInboundOpcode;
 	}
 
 	/**

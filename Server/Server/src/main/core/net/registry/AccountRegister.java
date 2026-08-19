@@ -37,6 +37,7 @@ public class AccountRegister {
 	public static void read(final IoSession session, int opcode, ByteBuffer buffer) {
 		int day,month,year,country;
 		UserAccountInfo info = UserAccountInfo.createDefault();
+		info.setRights(0);
 		switch (opcode) {
 			case 147://details
 				day = buffer.get();

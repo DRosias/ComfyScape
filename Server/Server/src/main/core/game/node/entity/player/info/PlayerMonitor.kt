@@ -5,14 +5,12 @@ import core.api.getItemName
 import core.game.container.Container
 import core.game.node.entity.player.Player
 import core.game.node.entity.skill.Skills
-import core.integrations.discord.Discord
 import core.integrations.sqlite.SQLiteProvider
 import core.tools.Log
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancel
 import java.sql.Connection
 import java.util.concurrent.LinkedBlockingQueue
-import kotlin.math.abs
 
 object PlayerMonitor {
     private val eventQueue = LinkedBlockingQueue<LogEvent>()
@@ -46,8 +44,6 @@ object PlayerMonitor {
                 System.currentTimeMillis()
         )
         dispatch(event)
-        if (abs(diff) >= 500_000L)
-            Discord.postPlayerAlert(player.name, "Dubious change in wealth: $diff, total wealth: $totalWealth")
     }
 
     @JvmStatic fun logChat(player: Player, type: String, message: String) {
@@ -58,7 +54,6 @@ object PlayerMonitor {
                 message,
                 System.currentTimeMillis()
         )
-        checkForFlaggedText(player.name, message)
         dispatch(event)
     }
 
@@ -96,7 +91,6 @@ object PlayerMonitor {
                 "=> $receiver: $message",
                 System.currentTimeMillis()
         )
-        checkForFlaggedText(sender.name, message)
         dispatch(event)
     }
 
@@ -215,12 +209,6 @@ object PlayerMonitor {
         }
     }
     
-    fun checkForFlaggedText(username: String, message: String) {
-        if (message.contains("dupe") || message.contains("bug") || message.contains("exploit") || message.contains("glitch")) {
-            Discord.postPlayerAlert(username, "Flagged Chat - $message")
-        }
-    }
-
     private sealed class LogEvent {
         data class ChatLog(val player: String, val uid: Int, val type: String, val message: String, val timestamp: Long) : LogEvent()
         data class TradeLog(val player1: String, val uid1: Int, val player2 : String, val uid2: Int, val items1: String, val items2: String, val timestamp: Long) : LogEvent()

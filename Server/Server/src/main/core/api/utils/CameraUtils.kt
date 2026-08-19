@@ -9,7 +9,7 @@ object CameraUtils {
  * these values:
  * Type [0-4] Jit: 0 Amp: 0 Freq: 128 Speed: 2
  *
- * **See Also:** [This forum post](https://forum.2009scape.org/viewtopic.php?t=173-in-game-camera-movement-documentation-server-sided)
+ * **See Also:** Archived server-side camera movement documentation.
  *
  * WARNING: Playing around with camera shake values may potentially trigger seizures for people with photosensitive epilepsy.
  * Please use care when discovering camera values.

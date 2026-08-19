@@ -12,7 +12,7 @@ import core.tools.StringUtils;
 import core.api.utils.Vector;
 
 /**
- * Represents a node which is anything that is interactable in 2009Scape.
+ * Represents a node which is anything that is interactable in ComfyScape.
  * @author Emperor
  */
 public abstract class Node {

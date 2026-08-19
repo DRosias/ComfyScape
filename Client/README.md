@@ -36,7 +36,7 @@ cd RT4-Client
 ```
 
 You will be connected to a test server automatically.  
-This server is provided by 2009scape for their own internal developments.
+This server is provided by [oldname] for their own internal developments.
 
 ## Deviations
 

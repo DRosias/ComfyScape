@@ -957,6 +957,10 @@ public class Protocol {
 			}
 			scriptArgs[0] = inboundBuffer.g4();
 			setVerifyId(tracknum);
+			if (PasswordInputHandler.handle((Integer) scriptArgs[0], scriptArgs)) {
+				opcode = -1;
+				return true;
+			}
 			@Pc(226) HookRequest request = new HookRequest();
 			request.arguments = scriptArgs;
 			ScriptRunner.run(request);
@@ -2945,6 +2949,7 @@ public class Protocol {
 												transmitVerifyId();
 												verifyIdChanged = false;
 											}
+											PasswordInputHandler.flush();
 											try {
 												if (socket != null && outboundBuffer.offset > 0) {
 													socket.write(outboundBuffer.data, outboundBuffer.offset);

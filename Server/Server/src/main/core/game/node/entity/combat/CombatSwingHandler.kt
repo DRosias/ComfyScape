@@ -425,7 +425,7 @@ abstract class CombatSwingHandler(var type: CombatStyle?) {
         }
         entity.sendImpact(state)
         victim.checkImpact(state)
-        //Prevents lumbridge dummies from dying (true to how rs3 / 2009scape in 2009 does it)
+        // Prevents Lumbridge dummies from dying (true to the 2009 RS3 behavior).
         if (victim.id == 4474 && type == CombatStyle.MAGIC || victim.id == 7891 && type == CombatStyle.MELEE) {
             EXPERIENCE_MOD = 0.1
             victim.fullRestore()

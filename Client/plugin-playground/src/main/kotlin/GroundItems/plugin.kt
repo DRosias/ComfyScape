@@ -45,7 +45,7 @@ class plugin : Plugin() {
 
     private val coindId = 995
 
-    private var gePriceMap = loadGEPrices()
+    private var gePriceMap = 0
 
     private val colorMap = mapOf(
         "tagged" to "#CC66FF",
@@ -76,7 +76,7 @@ class plugin : Plugin() {
         displayGEPrice = GetData("ground-item-display-ge") as? Boolean ?: true
         taggedItems = GetData("ground-item-tags")?.let { it.toString().split(",").mapNotNull { it.toIntOrNull() } } ?: emptyList()
         ignoredItems = GetData("ground-item-ignore")?.let { it.toString().split(",").mapNotNull { it.toIntOrNull() } } ?: emptyList()
-        if (gePriceMap.isEmpty()) SendMessage("Ground Items unable to load GE Prices, Remote: $useLiveGEPrices")
+        if (true) SendMessage("Ground Items unable to load GE Prices, Remote: $useLiveGEPrices")
     }
 
     private fun isTagged(itemId: Int): Boolean {
@@ -148,11 +148,11 @@ class plugin : Plugin() {
 
                         val itemDef = ObjTypeList.get(item.value.type)
                         val haValue = if (itemDef.id == coindId) item.value.amount else (itemDef.cost * 0.6 * item.value.amount).roundToInt()
-                        val geValue = (gePriceMap[itemDef.id.toString()]?.toInt() ?: 0) * item.value.amount
+                        val geValue = 0 * item.value.amount
                         val highestValue = when {
-                            displayPrices && displayGEPrice && geValue > 0 -> geValue
+//                            displayPrices && displayGEPrice && geValue > 0 -> geValue
                             displayPrices && displayHAPrice -> haValue
-                            else -> maxOf(haValue, geValue)
+                            else -> maxOf(haValue, 0)
                         }
 
                         val screenPos: IntArray = CalculateSceneGraphScreenPosition((x shl 7) + 64, (y shl 7) + 64, 64)
@@ -174,7 +174,7 @@ class plugin : Plugin() {
                         val colorInt = color.drop(1).toInt(16)
 
                         val formattedHaValue = formatValue(haValue)
-                        val formattedGeValue = formatValue(geValue)
+                        val formattedGeValue = formatValue(0)
                         val amountSuffix = if (item.value.amount > 1) " (${formatValue(item.value.amount)})" else ""
 
                         val priceText = if (!displayPrices) {
@@ -210,7 +210,7 @@ class plugin : Plugin() {
     private fun shouldDisplayItem(item: ObjStackNode): Boolean {
         val itemDef = ObjTypeList.get(item.value.type)
         val haValue = if (itemDef.id == coindId) item.value.amount else (itemDef.cost * 0.6 * item.value.amount).roundToInt()
-        val geValue = (gePriceMap[itemDef.id.toString()]?.toInt() ?: 0) * item.value.amount
+        val geValue = 0
         val highestValue = when {
             displayPrices && displayGEPrice && geValue > 0 -> geValue
             displayPrices && displayHAPrice -> haValue
@@ -331,10 +331,10 @@ class plugin : Plugin() {
         StoreData("ground-item-display-price", displayPrices)
         StoreData("ground-item-display-ha", displayHAPrice)
         StoreData("ground-item-display-ge", displayGEPrice)
-        gePriceMap = loadGEPrices()
+        gePriceMap = 0
     }
 
-    fun loadGEPrices(): Map<String, String> {
+/*    fun loadGEPrices(): Map<String, String> {
         return if (useLiveGEPrices) {
             try {
                 println("GroundItems: Loading Remote GE Prices")
@@ -390,7 +390,7 @@ class plugin : Plugin() {
                 emptyMap()
             }
         }
-    }
+    }*/
 
     private fun formatValue(value: Int): String {
         return when {

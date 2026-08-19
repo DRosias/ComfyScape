@@ -4,11 +4,14 @@ import core.net.IoReadEvent;
 import core.net.IoSession;
 import core.net.lobby.WorldList;
 import core.net.registry.AccountRegister;
+import core.game.world.GameWorld;
+import core.security.PasswordRecoveryRequests;
 import core.tools.Log;
 import core.tools.RandomFunction;
 import core.tools.SystemLogger;
 
 import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -62,6 +65,9 @@ public final class HSReadEvent extends IoReadEvent {
 		case 36:
 			AccountRegister.read(session, opcode, buffer);
 			break;
+		case PasswordRecoveryRequests.HANDSHAKE_OPCODE:
+			readPasswordRecoveryRequest(session, buffer, opcode);
+			break;
 		case 255: // World list
 			int updateStamp = buffer.getInt();
 			WorldList.sendUpdate(session, updateStamp);
@@ -70,6 +76,33 @@ public final class HSReadEvent extends IoReadEvent {
 			log(this.getClass(), Log.FINE, "PKT " + opcode);
 			session.disconnect();
 			break;
+		}
+	}
+
+	private void readPasswordRecoveryRequest(IoSession session, ByteBuffer buffer, int opcode) {
+		if (!buffer.hasRemaining()) {
+			queueBuffer(opcode);
+			return;
+		}
+		int length = buffer.get() & 0xFF;
+		if (length < 1 || length > PasswordRecoveryRequests.MAX_USERNAME_LENGTH) {
+			session.disconnect();
+			return;
+		}
+		if (buffer.remaining() < length) {
+			queueBuffer(opcode, length);
+			return;
+		}
+
+		byte[] encodedUsername = new byte[length];
+		buffer.get(encodedUsername);
+		String username = new String(encodedUsername, StandardCharsets.US_ASCII);
+		try {
+			if (GameWorld.getAccountStorage().checkUsernameTaken(username)) {
+				PasswordRecoveryRequests.submitKnownAccount(username);
+			}
+		} finally {
+			session.disconnect();
 		}
 	}
 

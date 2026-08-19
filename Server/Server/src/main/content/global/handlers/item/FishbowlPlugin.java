@@ -28,7 +28,7 @@ import static core.api.ContentAPIKt.*;
 // https://www.youtube.com/watch?v=xu7Err9YUgw
 // https://www.youtube.com/watch?v=7XSVFKnUM9Y&t=683s
 // https://2007rshelp.com/misc.php?id=3#7
-// https://oldschool2009scape.fandom.com/wiki/Fishbowl_(pet)
+// Source: archived Fishbowl pet documentation.
 
 @Initializable
 public class FishbowlPlugin extends OptionHandler {

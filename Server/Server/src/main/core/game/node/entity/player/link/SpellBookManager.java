@@ -61,6 +61,7 @@ public final class SpellBookManager {
 	public enum SpellbookChangeSource {
 		ALTAR,
 		MAGIC_CAPE_PERK,
+		SPELLBOOK_COMMAND,
 		SPELLBOOK_SWAP_CAST,
 		SPELLBOOK_SWAP_RESTORE
 	}

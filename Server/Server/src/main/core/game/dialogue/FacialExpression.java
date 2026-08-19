@@ -13,9 +13,9 @@ public enum FacialExpression {
      * The normal talking expression.
      */
 
-    //Names based off https://2009scape.wiki/w/Chathead/Animations
+    // Names based on archived chathead animation documentation.
 
-    //Chat heads from oldschool 2009scape?
+    // Chat heads from the old-school 2009 era?
     //Maybe for gnomes or dwarves? Chat heads are frozen when used on Human NPCs
     OLD_HAPPY(588),
     OLD_CALM_TALK1(589),

@@ -135,7 +135,7 @@ class LobsterCatcher : Script() {
 
 
             State.SELL_GE -> {
-                scriptAPI.sellOnGE(Items.RAW_LOBSTER_377)
+                scriptAPI.discardBankedOutput(Items.RAW_LOBSTER_377)
                 state = State.TELE_CATH
             }
 

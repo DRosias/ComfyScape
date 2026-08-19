@@ -50,7 +50,7 @@ public final class SirLancelotDialogue extends DialoguePlugin {
 
 	@Override
 	public boolean handle(int interfaceId, int buttonId) {
-		// TODO more accurate dialogue https://2009scape.wiki/w/Transcript:Merlin%27s_Crystal#Sir_Lancelot
+		// TODO: make the dialogue more accurate using archived transcripts.
 		switch (stage) {
 		case 0:
 			if (quest.getStage(player) >= 20 && quest.getStage(player) < 50) {

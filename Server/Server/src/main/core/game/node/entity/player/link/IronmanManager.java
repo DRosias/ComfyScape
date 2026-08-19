@@ -6,9 +6,10 @@ import core.game.node.entity.player.Player;
 import java.nio.ByteBuffer;
 
 /**
- * Manages the iron man mode of an account.
- * @author Vexia
- * 
+ * Compatibility shim for legacy player saves.
+ *
+ * Ironman mode is no longer available on this server. Keeping this class lets
+ * older save files load safely while ensuring every account is a standard one.
  */
 public class IronmanManager {
 
@@ -35,7 +36,7 @@ public class IronmanManager {
 	 * @return {@code True} if so.
 	 */
 	public boolean checkRestriction() {
-		return checkRestriction(IronmanMode.STANDARD);
+		return false;
 	}
 
 	/**
@@ -43,10 +44,6 @@ public class IronmanManager {
 	 * @return {@code True} if so.
 	 */
 	public boolean checkRestriction(IronmanMode mode) {
-		if (isIronman() && this.mode.ordinal() >= mode.ordinal()) {
-			player.sendMessage("You can't do that as an Ironman.");
-			return true;
-		}
 		return false;
 	}
 
@@ -55,7 +52,7 @@ public class IronmanManager {
 	 * @return {@code True} if one.
 	 */
 	public boolean isIronman() {
-		return mode != IronmanMode.NONE;
+		return false;
 	}
 
 	/**
@@ -71,7 +68,7 @@ public class IronmanManager {
 	 * @return the mode
 	 */
 	public IronmanMode getMode() {
-		return mode;
+		return IronmanMode.NONE;
 	}
 
 	/**
@@ -79,7 +76,7 @@ public class IronmanManager {
 	 * @param mode the mode to set.
 	 */
 	public void setMode(IronmanMode mode) {
-		this.mode = mode;
+		this.mode = IronmanMode.NONE;
 	}
 
 }

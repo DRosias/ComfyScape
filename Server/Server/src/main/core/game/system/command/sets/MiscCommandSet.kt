@@ -6,6 +6,7 @@ import content.global.skill.cooking.fermenting.BrewGrowth
 import content.global.skill.farming.timers.*
 import content.minigame.fishingtrawler.TrawlerLoot
 import content.region.misthalin.draynor.quest.anma.AnmaCutscene
+import content.region.misthalin.lumbridge.dialogue.HansDialoguePlugin
 import core.ServerConstants
 import core.api.*
 import core.api.utils.permadeath
@@ -16,6 +17,7 @@ import core.game.bots.AIRepository
 import core.game.component.Component
 import core.game.ge.GrandExchange
 import core.game.node.entity.npc.NPC
+import core.game.node.entity.npc.drop.NPCDropTables
 import core.game.node.entity.player.Player
 import core.game.node.entity.player.info.Rights
 import core.game.node.entity.skill.Skills
@@ -69,11 +71,19 @@ class MiscCommandSet : CommandSet(Privilege.ADMIN){
         /**
          * Toggles debug mode
          */
-        define("debug", Privilege.STANDARD, "", "Toggles debug mode."){ player, _ ->
+        define("debug", Privilege.ADMIN, "", "Toggles debug mode."){ player, _ ->
             player.toggleDebug()
         }
 
-        define("calcaccuracy", Privilege.STANDARD, "::calcaccuracy <lt>NPC ID<gt>", "Calculates and prints your current chance to hit a given NPC."){ player, args ->
+        define("autopickup", Privilege.STANDARD, "", "Toggles automatic pickup of eligible NPC drops.") { player, _ ->
+            toggleAutoDropFeature(player, NPCDropTables.AUTO_PICKUP_ATTRIBUTE, "Auto-pickup")
+        }
+
+        define("autobankdrops", Privilege.STANDARD, "", "Toggles automatic banking of eligible NPC drops.") { player, _ ->
+            toggleAutoDropFeature(player, NPCDropTables.AUTO_BANK_ATTRIBUTE, "Auto-bank drops")
+        }
+
+        define("calcaccuracy", Privilege.ADMIN, "::calcaccuracy <lt>NPC ID<gt>", "Calculates and prints your current chance to hit a given NPC."){ player, args ->
             val handler = player.getSwingHandler(false)
             player.sendMessage("handler type: ${handler.type}")
             val accuracy = handler.calculateAccuracy(player)
@@ -113,7 +123,7 @@ class MiscCommandSet : CommandSet(Privilege.ADMIN){
         /**
          * Prints player's current location
          */
-        define("loc", Privilege.STANDARD, "", "Prints quite a lot of information about your current location."){ player, _->
+        define("loc", Privilege.ADMIN, "", "Prints quite a lot of information about your current location."){ player, _->
             val l = player.location
             val r = player.viewport.region
             var obj: Scenery? = null
@@ -138,24 +148,24 @@ class MiscCommandSet : CommandSet(Privilege.ADMIN){
         /**
          * Tells the player to use loc
          */
-        define("pos", Privilege.STANDARD){ player, _->
+        define("pos", Privilege.ADMIN){ player, _->
             notify(player, "Do you mean ::loc?")
         }
 
         /**
          * Tells the player to use loc
          */
-        define("coords", Privilege.STANDARD){ player, _->
+        define("coords", Privilege.ADMIN){ player, _->
             notify(player, "Do you mean ::loc?")
         }
 
-        define("calcmaxhit", Privilege.STANDARD, description = "Calculates and prints your current maximum hit.") { player, _ ->
+        define("calcmaxhit", Privilege.ADMIN, description = "Calculates and prints your current maximum hit.") { player, _ ->
             val swingHandler = player.getSwingHandler(false)
             val hit = swingHandler.calculateHit(player, player, 1.0)
             notify(player, "max hit: ${hit} (${(swingHandler as Object).getClass().getName()})")
         }
 
-        define("calcdefence", Privilege.STANDARD, "::calcdefence <lt>NPC ID<gt>", "Calculates and prints your current raw defence values for Melee, Ranged and Magic against a given NPC.") { player, args ->
+        define("calcdefence", Privilege.ADMIN, "::calcdefence <lt>NPC ID<gt>", "Calculates and prints your current raw defence values for Melee, Ranged and Magic against a given NPC.") { player, args ->
             val meleeHandler = core.game.node.entity.combat.MeleeSwingHandler()
             val rangeHandler = core.game.node.entity.combat.RangeSwingHandler()
             val magicHandler = core.game.node.entity.combat.MagicSwingHandler()
@@ -227,10 +237,10 @@ class MiscCommandSet : CommandSet(Privilege.ADMIN){
         /**
          * Lists the players currently online
          */
-        define("players", Privilege.MODERATOR, "", "Lists the online players."){ player, _ ->
-            val rights = player.rights.ordinal
+        define("players", Privilege.STANDARD, "", "Lists the online players."){ player, _ ->
             if (player!!.interfaceManager.isOpened && player.interfaceManager.opened.id != Components.QUESTJOURNAL_SCROLL_275 || player.locks.isMovementLocked || player.locks.isTeleportLocked) {
                 reject(player, "Please finish what you're doing first.")
+                return@define
             }
             player.interfaceManager.open(Component(Components.QUESTJOURNAL_SCROLL_275))
             var i = 0
@@ -241,16 +251,32 @@ class MiscCommandSet : CommandSet(Privilege.ADMIN){
             val red = "<col=8A0808>"
             player.packetDispatch.sendString("<col=8A0808>" + "Players" + "</col>", 275, 2)
             var lineStart = 11
-            for(p in Repository.players){
-                if(!p.isArtificial)
-                    player.packetDispatch.sendString(red + "<img=" + (Rights.getChatIcon(p) - 1) + ">" + p.username + if(rights > 0) " [ip=" + p.details.ipAddress + ", name=" + p.details.compName + "]" else "",275,lineStart++)
+            for (p in Repository.players) {
+                if (!p.isArtificial) {
+                    val icon = Rights.getChatIcon(p)
+                    val rankIcon = if (icon > 0) "<img=${icon - 1}>" else ""
+                    player.packetDispatch.sendString(red + rankIcon + p.username, 275, lineStart++)
+                }
             }
+        }
+
+        define("where", Privilege.STANDARD, "::where <lt>USERNAME<gt>", "Shows a player's general area.") { player, args ->
+            if (args.size < 2) {
+                reject(player, "Usage: ::where <player>")
+                return@define
+            }
+            val target = Repository.getPlayerByName(args.slice(1 until args.size).joinToString("_"))
+            if (target == null || target.isArtificial) {
+                reject(player, "That player is not online.")
+                return@define
+            }
+            sendMessage(player, "${target.username} is ${describeArea(target)}.")
         }
 
         /**
          * Lists information about a bot
          */
-        define("botinfo", Privilege.STANDARD, "::botinfo <lt>botname<gt>", "Prints debug information about a bot"){ player, args ->
+        define("botinfo", Privilege.ADMIN, "::botinfo <lt>botname<gt>", "Prints debug information about a bot"){ player, args ->
             val scriptInstances = AIRepository.PulseRepository
 
             // Find the bot with the given name (non-case sensitive, concat args by space)
@@ -266,7 +292,7 @@ class MiscCommandSet : CommandSet(Privilege.ADMIN){
         }
 
         /**
-         * Opens the credit/voting shop
+         * Opens the credit shop.
          */
         define("shop", Privilege.STANDARD, "", "Opens the credit shop."){ player, _ ->
             if (player.locks.isInteractionLocked || player.locks.isMovementLocked) {
@@ -1110,6 +1136,22 @@ class MiscCommandSet : CommandSet(Privilege.ADMIN){
         }
     }
 
+    private fun describeArea(target: Player): String {
+        val location = target.location
+        val nearest = ServerConstants.TELEPORT_DESTINATIONS
+            .asSequence()
+            .filter { (it[0] as core.game.world.map.Location).z == location.z }
+            .filter { (it[1] as String) != "test area" && !(it[1] as String).startsWith("quest ") }
+            .minByOrNull {
+                val landmark = it[0] as core.game.world.map.Location
+                val dx = landmark.x - location.x
+                val dy = landmark.y - location.y
+                dx.toLong() * dx + dy.toLong() * dy
+            }
+
+        return nearest?.get(1)?.let { "near $it" } ?: "somewhere away from the main roads"
+    }
+
     private fun showGeBook(player: Player, title: String, leftLines: ArrayList<String>, rightLines: ArrayList<String>) {
         if (leftLines.size == 0) {
             sendMessage(player, "No results.")
@@ -1139,4 +1181,31 @@ class MiscCommandSet : CommandSet(Privilege.ADMIN){
         }
         BookInterface.openBook(player, BookInterface.FANCY_BOOK_26, ::display)
     }
+}
+
+private fun toggleAutoDropFeature(player: Player, attribute: String, label: String) {
+    val currentlyEnabled = player.getAttribute(attribute, false)
+    if (currentlyEnabled) {
+        if (attribute == NPCDropTables.AUTO_PICKUP_ATTRIBUTE) {
+            NPCDropTables.setAutoPickupEnabled(player, false)
+        } else {
+            NPCDropTables.setAutoBankEnabled(player, false)
+        }
+        sendMessage(player, "$label is now disabled.")
+        return
+    }
+    if (!HansDialoguePlugin.isAdultVerified(player)) {
+        sendMessage(player, "$label requires adult verification. Speak to Hans and choose 'Prove I'm not a child'.")
+        return
+    }
+    if (!NPCDropTables.isAutoDropCommandsEnabled(player)) {
+        sendMessage(player, "Auto-drop commands are disabled. Speak to Hans to enable them.")
+        return
+    }
+    if (attribute == NPCDropTables.AUTO_PICKUP_ATTRIBUTE) {
+        NPCDropTables.setAutoPickupEnabled(player, true)
+    } else {
+        NPCDropTables.setAutoBankEnabled(player, true)
+    }
+    sendMessage(player, "$label is now enabled.")
 }

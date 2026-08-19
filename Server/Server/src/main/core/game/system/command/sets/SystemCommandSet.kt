@@ -11,6 +11,10 @@ import core.game.system.command.Privilege
 import core.game.world.GameWorld
 import core.game.world.repository.Repository
 import core.plugin.Initializable
+import core.security.PasswordPolicy
+import core.security.PasswordRecoveryRequests
+import core.security.RolePolicy
+import core.security.EncryptedPasswordInput
 import org.rs09.consts.Items
 import kotlin.system.exitProcess
 
@@ -38,22 +42,34 @@ class SystemCommandSet : CommandSet(Privilege.ADMIN) {
         /**
          * Allows a player to reset their password
          */
-        define("resetpassword", Privilege.STANDARD, "", "WARNING: Case insensitive due to dialogue limitations.") { player, args ->
-            sendInputDialogue(player, InputType.STRING_SHORT, "Enter Current Password:"){value ->
+        define("resetpassword", Privilege.STANDARD, "::resetpassword", "Changes your password. Passwords are case-sensitive.") { player, _ ->
+            sendPasswordInput(player, "Enter Current Password:"){value ->
                 val pass = value.toString()
                 runTask(player) {
                     if (GameWorld.authenticator.checkPassword(player, pass)) {
-                        sendInputDialogue(player, InputType.STRING_SHORT, "Enter New Password:") { value2 ->
+                        sendPasswordInput(player, "Enter New Password:") { value2 ->
                             val newPass = value2.toString()
                             if (pass == newPass) {
                                 sendDialogue(player, "Failed: Passwords Match")
-                            } else if (newPass.length !in 5..20) {
-                                sendDialogue(player, "Failed: Password Too Long Or Too Short")
-                            } else if (newPass == player.details.accountInfo.username) {
-                                sendDialogue(player, "Failed: Password Is Username")
                             } else {
-                                GameWorld.authenticator.updatePassword(player.details.accountInfo.username, newPass)
-                                sendDialogue(player, "Success: Password Updated!")
+                                val validationError = PasswordPolicy.validationError(player.details.accountInfo.username, newPass)
+                                if (validationError != null) {
+                                    sendDialogue(player, "Failed: $validationError")
+                                } else {
+                                    runTask(player) {
+                                        sendPasswordInput(player, "Confirm New Password:") { confirmation ->
+                                            if (newPass != confirmation.toString()) {
+                                                sendDialogue(player, "Failed: Passwords Did Not Match")
+                                            } else {
+                                                val username = player.details.accountInfo.username
+                                                GameWorld.authenticator.updatePassword(username, newPass)
+                                                player.details.password = GameWorld.accountStorage.getAccountInfo(username).password
+                                                PasswordRecoveryRequests.personalPasswordChanged(username)
+                                                sendDialogue(player, "Success: Password Updated!")
+                                            }
+                                        }
+                                    }
+                                }
                             }
                         }
                     } else {
@@ -64,31 +80,10 @@ class SystemCommandSet : CommandSet(Privilege.ADMIN) {
         }
 
         /**
-         * Allows an Administrator to reset a password
+         * Allows the owner to set another account's password without exposing it in chat.
          */
-        define("setpasswordother", Privilege.ADMIN, "::resetpasswordother <lt>USERNAME<gt> <lt>NEW<gt>", "Gives the username password NEW.") { player, args ->
-            if (args.size != 3) {
-                reject(player, "Usage: ::resetpasswordother user new", "WARNING: THIS IS PERMANENT.", "WARNING: PASSWORD CAN NOT CONTAIN SPACES.")
-            }
-            val otherUser = args[1]
-            val newPass = args[2]
-
-            if (GameWorld.accountStorage.checkUsernameTaken(otherUser)) {
-
-                if (newPass.length < 5 || newPass.length > 20) {
-                    reject(player, "NEW PASSWORD MUST BE BETWEEN 5 AND 20 CHARACTERS")
-                }
-
-                if (newPass == otherUser) {
-                    reject(player, "PASSWORD CAN NOT BE SAME AS USERNAME.")
-                }
-
-                GameWorld.authenticator.updatePassword(otherUser, newPass)
-                notify(player, "Password updated successfully.")
-
-            } else {
-                reject(player, "USER DOES NOT EXIST!")
-            }
+        define("resetpasswordother", Privilege.ADMIN, "::resetpasswordother <lt>USERNAME<gt>", "Sets the account password using masked prompts.") { player, args ->
+            resetOtherPassword(player, args)
         }
 
         define("giveitem", Privilege.ADMIN, "::giveitem <lt>USERNAME<gt> <lt>ITEM ID<gt> <lt>AMOUNT<gt>", "Gives the user the amount of the given item.") { player, args ->
@@ -304,5 +299,45 @@ class SystemCommandSet : CommandSet(Privilege.ADMIN) {
             container.toArray().firstOrNull { it?.id == id }?.let { return Pair(it, container) }
         }
         return null
+    }
+
+    private fun resetOtherPassword(player: Player, args: Array<String>) {
+        if (args.size != 2) {
+            notify(player, "Usage: ::resetpasswordother username")
+            return
+        }
+
+        val username = RolePolicy.normalize(args[1])
+        if (!GameWorld.accountStorage.checkUsernameTaken(username)) {
+            notify(player, "User does not exist.")
+            return
+        }
+
+        sendPasswordInput(player, "Enter New Password:") { value ->
+            val newPassword = value.toString()
+            val validationError = PasswordPolicy.validationError(username, newPassword)
+            if (validationError != null) {
+                sendDialogue(player, "Failed: $validationError")
+            } else {
+                runTask(player) {
+                    sendPasswordInput(player, "Confirm New Password:") { confirmation ->
+                        if (newPassword != confirmation.toString()) {
+                            sendDialogue(player, "Failed: Passwords Did Not Match")
+                        } else {
+                            GameWorld.authenticator.updatePassword(username, newPassword)
+                            Repository.getPlayerByName(username)?.let { onlinePlayer ->
+                                onlinePlayer.details.password = GameWorld.accountStorage.getAccountInfo(username).password
+                            }
+                            sendDialogue(player, "Success: Password Updated for $username.")
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private fun sendPasswordInput(player: Player, prompt: String, handler: (Any) -> Unit) {
+        player.setAttribute(EncryptedPasswordInput.REQUIRED_ATTRIBUTE, true)
+        sendInputDialogue(player, InputType.STRING_LONG, prompt, handler)
     }
 }

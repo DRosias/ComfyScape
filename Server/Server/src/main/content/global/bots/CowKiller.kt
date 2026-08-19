@@ -125,7 +125,7 @@ class CowKiller : Script() {
 
             State.SELL_GE -> {
                 state = State.TELE_LUM
-                scriptAPI.sellOnGE(Items.COWHIDE_1739)
+                scriptAPI.discardBankedOutput(Items.COWHIDE_1739)
             }
 
             State.TELE_LUM -> {

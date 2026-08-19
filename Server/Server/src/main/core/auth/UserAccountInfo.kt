@@ -1,5 +1,6 @@
 package core.auth
 
+import core.ServerConstants
 import java.sql.Timestamp
 
 class UserAccountInfo(
@@ -25,7 +26,7 @@ class UserAccountInfo(
     companion object {
         val default = createDefault()
         @JvmStatic fun createDefault() : UserAccountInfo {
-            return UserAccountInfo("", "", 0, 0, 0,  "", "", 0L, 0L, "", "", "", "", "1,0,8,9", 0L, 0L, false, joinDate = Timestamp(System.currentTimeMillis())).also { it.setInitialReferenceValues() }
+            return UserAccountInfo("", "", 0, 0, ServerConstants.STARTING_CREDITS,  "", "", 0L, 0L, "", "", "", "", "1,0,8,9", 0L, 0L, false, joinDate = Timestamp(System.currentTimeMillis())).also { it.setInitialReferenceValues() }
         }
     }
 
@@ -51,7 +52,7 @@ class UserAccountInfo(
     }
 
     override fun toString(): String {
-        return "USER:$username,PASS:$password,UID:$uid,RIGHTS:$rights,CREDITS:$credits,IP:$ip,LASTIP:$lastUsedIp"
+        return "USER:$username,PASS:[REDACTED],UID:$uid,RIGHTS:$rights,CREDITS:$credits,IP:$ip,LASTIP:$lastUsedIp"
     }
 
     override fun equals(other: Any?): Boolean {
